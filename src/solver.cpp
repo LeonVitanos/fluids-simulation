@@ -3,6 +3,8 @@
 #define FOR_EACH_CELL for ( i=1 ; i<=N ; i++ ) { for ( j=1 ; j<=N ; j++ ) {
 #define END_FOR }}
 
+#include <math.h>
+
 void add_source ( int N, float * x, float * s, float dt )
 {
 	int i, size=(N+2)*(N+2);
@@ -79,16 +81,47 @@ void project ( int N, float * u, float * v, float * p, float * div )
 	set_bnd ( N, 1, u ); set_bnd ( N, 2, v );
 }
 
-void dens_step ( int N, float * x, float * x0, float * u, float * v, float diff, float dt )
+void vorticity_confinement ( int N, float * u, float * v, float * u0, float * v0, float * d0, float dt )
 {
-	add_source ( N, x, x0, dt );
-	SWAP ( x0, x ); diffuse ( N, 0, x, x0, diff, dt );
-	SWAP ( x0, x ); advect ( N, 0, x, x0, u, v, dt );
+	int size = (N + 2) * (N + 2);
+
+	int i, j, ij;
+	float *curlx = (float *)malloc(size * sizeof(float));
+	float *curly = (float *)malloc(size * sizeof(float));
+	float *curl = d0;//(float *)malloc(size * sizeof(float));
+	float dt0 = dt * 5.0f;
+
+	FOR_EACH_CELL
+		ij = IX(i,j);
+		curlx[ij] = (v[IX(i+1,j)] - v[IX(i-1,j)]) * 0.5f;
+		curly[ij] = (u[IX(i,j+1)] - u[IX(i,j-1)]) * 0.5f;
+		curl[ij] = abs(curly[ij] - curlx[ij]);
+	END_FOR
+
+	FOR_EACH_CELL
+		ij = IX(i,j);
+		float Nx = (curl[IX(i+1,j)] - curl[IX(i-1,j)]) * 0.5;
+		float Ny = (curl[IX(i,j+1)] - curl[IX(i,j-1)]) * 0.5;
+		float len = 1.0f/(sqrtf(Nx*Nx+Ny*Ny)+0.0000001f);
+		Nx *= len;
+		Ny *= len;
+		u0[ij] += Nx * (curlx[ij] - curly[ij]) * dt0;
+		v0[ij] += Ny * (curly[ij] - curlx[ij]) * dt0;
+	END_FOR
 }
 
-void vel_step ( int N, float * u, float * v, float * u0, float * v0, float visc, float dt )
+// Delp/Delt = -(u * D)p + kD^2p + S
+void dens_step ( int N, float * x, float * x0, float * u, float * v, float diff, float dt )
+{
+	add_source ( N, x, x0, dt );						// S
+	SWAP ( x0, x ); diffuse ( N, 0, x, x0, diff, dt );	// kD^2p
+	SWAP ( x0, x ); advect ( N, 0, x, x0, u, v, dt );	// -(u * D)p
+}
+
+void vel_step ( int N, float * u, float * v, float * u0, float * v0, float visc, float dt, float * d0 )
 {
 	add_source ( N, u, u0, dt ); add_source ( N, v, v0, dt );
+	vorticity_confinement(N, u, v, u0, v0, d0, dt);
 	SWAP ( u0, u ); diffuse ( N, 1, u, u0, visc, dt );
 	SWAP ( v0, v ); diffuse ( N, 2, v, v0, visc, dt );
 	project ( N, u, v, u0, v0 );

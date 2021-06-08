@@ -31,16 +31,16 @@ set(SOURCE_FILES
         src/demo.cpp
         src/solver.cpp)
 
-set(LIBRARY_FILES
-        lib/x64/libfreeglut.a
-        lib/x64/libfreeglut_static.a
-        lib/libfreeglut.a
-        lib/libfreeglut_static.a
-        lib/libpng.dll.a
-        lib/libpng.la
-        lib/libpng12.a
-        lib/libpng12.dll.a
-        lib/libpng12.la)
+#set(LIBRARY_FILES
+#        lib/x64/libfreeglut.a
+#        lib/x64/libfreeglut_static.a
+#        lib/libfreeglut.a
+#        lib/libfreeglut_static.a
+#        lib/libpng.dll.a
+#        lib/libpng.la
+#        lib/libpng12.a
+#        lib/libpng12.dll.a
+#        lib/libpng12.la)
 
 add_executable(2imv15_project_2 ${SOURCE_FILES} ${HEADER_FILES} ${LIBRARY_FILES})
 target_link_libraries(2imv15_project_2 ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
