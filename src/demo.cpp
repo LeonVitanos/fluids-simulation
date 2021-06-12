@@ -28,14 +28,15 @@
 
 /* external definitions (from solver.c) */
 
-extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt);
-extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0);
+extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float d, float *boundaries);
+extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, float *boundaries);
 
 /* global variables */
 
 static int N;
 static float dt, diff, visc;
 static float force, source;
+static float *boundaries;
 static int dvel;
 
 static float *u, *v, *u_prev, *v_prev;
@@ -69,6 +70,8 @@ static void free_data(void)
 		free(dens_prev);
 	if (curl)
 		free(curl);
+	if (boundaries)
+		free(boundaries);
 }
 
 static void clear_data(void)
@@ -77,7 +80,7 @@ static void clear_data(void)
 
 	for (i = 0; i < size; i++)
 	{
-		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] = 0.0f;
+		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] = boundaries[i] = 0.0f;
 	}
 }
 
@@ -92,6 +95,7 @@ static int allocate_data(void)
 	dens = (float *)malloc(size * sizeof(float));
 	dens_prev = (float *)malloc(size * sizeof(float));
 	curl = (float *)malloc(size * sizeof(float));
+	boundaries = (float *)malloc(size * sizeof(float));
 
 	if (!u || !v || !u_prev || !v_prev || !dens || !dens_prev || !curl)
 	{
@@ -179,6 +183,40 @@ static void draw_density(void)
 			glVertex2f(x + h, y + h);
 			glColor3f(d01, d01, d01);
 			glVertex2f(x, y + h);
+		}
+	}
+
+	glEnd();
+}
+
+// TODO figure out why this is not working
+static void draw_boundaries(void)
+{
+	glColor3f(.7f, .7f, .7f);
+	glLineWidth(1.0f);
+
+	glBegin(GL_LINES);
+
+	int i, j;
+	float x, y;
+	float h = 1.0f / N;
+
+	for (i = 0; i <= N; i++)
+	{
+		x = (i - 1) * h;
+		for (j = 0; j <= N; j++)
+		{
+			if (boundaries[IX(i, j)] == 1)
+
+			{
+				y = (j - 1) * h;
+				// Draw a crossed line to indicate a boundary (for now)
+				glColor3f(0.6, 0.2, 0.5);
+				glVertex2f(x, y);
+				glVertex2f(x + h, y + h);
+				glVertex2f(x, y + h);
+				glVertex2f(x + h, y);
+			}
 		}
 	}
 
@@ -280,8 +318,13 @@ static void reshape_func(int width, int height)
 static void idle_func(void)
 {
 	get_from_UI(dens_prev, u_prev, v_prev);
-	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl);
-	dens_step(N, dens, dens_prev, u, v, diff, dt);
+	for (int j = 10; j < 40; j++)
+	{
+		boundaries[IX(10, j)] = 1;
+	}
+
+	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries);
+	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries);
 
 	glutSetWindow(win_id);
 	glutPostRedisplay();
@@ -294,7 +337,10 @@ static void display_func(void)
 	if (dvel)
 		draw_velocity();
 	else
+	{
 		draw_density();
+		draw_boundaries();
+	}
 
 	post_display();
 }
@@ -385,6 +431,8 @@ int main(int argc, char **argv)
 	if (!allocate_data())
 		exit(1);
 	clear_data();
+
+	// Ideally we set up scenes here again
 
 	win_x = 512;
 	win_y = 512;
