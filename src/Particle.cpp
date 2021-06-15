@@ -23,7 +23,7 @@ void Particle::reset()
 }
 void Particle::draw(bool force, bool vel)
 {
-	const double h = 0.03;
+	const double h = 0.015;
 	glColor3f(1.f, 1.f, 1.f);
 	glBegin(GL_QUADS);
 	glVertex2f(m_Position[0] - h / 2.0, m_Position[1] - h / 2.0);

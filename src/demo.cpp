@@ -22,7 +22,15 @@
 #include <GL/glut.h>
 #endif
 
+#include <vector>
+#include "Particle.h" 
+#include "Force.h"
+#include "SpringForce.h"
+#include "Wall.h"
+
 /* macros */
+
+extern void simulation_step(std::vector<Particle *> pVector, std::vector<Force *> forces, std::vector<Force *> constraints, std::vector<Wall *> walls, float dt, int solver);
 
 #define IX(i, j) ((i) + (N + 2) * (j))
 
@@ -47,6 +55,12 @@ static int win_id;
 static int win_x, win_y;
 static int mouse_down[3];
 static int omx, omy, mx, my;
+
+std::vector<Particle *> pVector;
+std::vector<Force *> forces;
+std::vector<Force *> constraints;
+std::vector<Wall *> walls;
+bool drawForces [7] = {false, false, false, false, false, false, false};
 
 /*
   ----------------------------------------------------------------------
@@ -81,6 +95,14 @@ static void clear_data(void)
 	for (i = 0; i < size; i++)
 	{
 		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] = boundaries[i] = 0.0f;
+	}
+
+	int ii;
+	size = pVector.size();
+
+	for (ii = 0; ii < size; ii++)
+	{
+		pVector[ii]->reset();
 	}
 }
 
@@ -223,6 +245,24 @@ static void draw_boundaries(void)
 	glEnd();
 }
 
+static void draw_particles(void) {
+	int size = pVector.size();
+
+	for (int ii = 0; ii < size; ii++)
+	{
+		pVector[ii]->draw(false, false);
+	}
+}
+
+static void draw_forces(void) {
+	int size = forces.size();
+
+	for (int ii = 0; ii < size; ii++)
+	{
+		forces[ii]->draw(drawForces);
+	}
+}
+
 /*
   ----------------------------------------------------------------------
    relates mouse movements to forces sources
@@ -325,6 +365,7 @@ static void idle_func(void)
 
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries);
+	simulation_step(pVector, forces, constraints, walls, dt, 0);
 
 	glutSetWindow(win_id);
 	glutPostRedisplay();
@@ -340,6 +381,8 @@ static void display_func(void)
 	{
 		draw_density();
 		draw_boundaries();
+		draw_particles();
+		draw_forces();
 	}
 
 	post_display();
@@ -433,6 +476,56 @@ int main(int argc, char **argv)
 	clear_data();
 
 	// Ideally we set up scenes here again
+
+	/*const Vec2f center(0.5f, 0.5f);
+
+	pVector.push_back(new Particle(center));*/
+
+	const double dist = 0.05;
+        Vec2f center(0.0, 0.0);
+        const Vec2f offset(dist, 0.0);
+
+        for (int i = 0; i < 6; i++)
+        {
+            center = Vec2f(0.5, 0.5 + 5 * dist - dist * i);
+            for (int j = -2; j <= 2; j++)
+            {
+                pVector.push_back(new Particle(center + j * offset));
+                //forces.push_back((Force *)new Gravity(particles.back()));
+                if (i == 0)
+                {
+                    //Apply fixed constraint on the first row particles
+                    //constraints.push_back((Force *)new SlidingConstraint(particles.back(), 0.25));
+                    if (j != -2)
+                    {
+                    }
+                    // Rod constraints here
+                }
+                if (j != -2)
+                    //spring connecting horizontally
+                    forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 1], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
+                if (i != 0)
+                {
+                    //spring connecting vertically
+                    forces.push_back((Force *)new SpringForce(pVector[i * 5 - 5 + j + 2], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
+                    if (j != 2)
+                        //spring connecting diagonally to the right
+                        forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 4], dist, 0.05, 0.8));
+                    if (j != -2)
+                        //spring connecting diagonally to the left
+                        forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 6], dist, 0.05, 0.8));
+                }
+            }
+
+        }
+
+	int size = pVector.size();
+
+	for (int ii = 0; ii < size; ii++)
+	{
+		pVector[ii]->reset();
+	}
+			//forces.push_back((Force *)new SpringForce(pVector[0], pVector[1], dist, 0.7, 0.8));
 
 	win_x = 512;
 	win_y = 512;
