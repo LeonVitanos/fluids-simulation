@@ -477,47 +477,42 @@ int main(int argc, char **argv)
 
 	// Ideally we set up scenes here again
 
-	/*const Vec2f center(0.5f, 0.5f);
-
-	pVector.push_back(new Particle(center));*/
-
 	const double dist = 0.05;
-        Vec2f center(0.0, 0.0);
-        const Vec2f offset(dist, 0.0);
+	Vec2f center(0.0, 0.0);
+	const Vec2f offset(dist, 0.0);
 
-        for (int i = 0; i < 6; i++)
-        {
-            center = Vec2f(0.5, 0.5 + 5 * dist - dist * i);
-            for (int j = -2; j <= 2; j++)
-            {
-                pVector.push_back(new Particle(center + j * offset));
-                //forces.push_back((Force *)new Gravity(particles.back()));
-                if (i == 0)
-                {
-                    //Apply fixed constraint on the first row particles
-                    //constraints.push_back((Force *)new SlidingConstraint(particles.back(), 0.25));
-                    if (j != -2)
-                    {
-                    }
-                    // Rod constraints here
-                }
-                if (j != -2)
-                    //spring connecting horizontally
-                    forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 1], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
-                if (i != 0)
-                {
-                    //spring connecting vertically
-                    forces.push_back((Force *)new SpringForce(pVector[i * 5 - 5 + j + 2], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
-                    if (j != 2)
-                        //spring connecting diagonally to the right
-                        forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 4], dist, 0.05, 0.8));
-                    if (j != -2)
-                        //spring connecting diagonally to the left
-                        forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 6], dist, 0.05, 0.8));
-                }
-            }
-
-        }
+	for (int i = 0; i < 6; i++)
+	{
+		center = Vec2f(0.5, 0.5 + 5 * dist - dist * i);
+		for (int j = -2; j <= 2; j++)
+		{
+			pVector.push_back(new Particle(center + j * offset));
+			//forces.push_back((Force *)new Gravity(particles.back()));
+			if (i == 0)
+			{
+				//Apply fixed constraint on the first row particles
+				//constraints.push_back((Force *)new SlidingConstraint(particles.back(), 0.25));
+				if (j != -2)
+				{
+				}
+				// Rod constraints here
+			}
+			if (j != -2)
+				//spring connecting horizontally
+				forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 1], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
+			if (i != 0)
+			{
+				//spring connecting vertically
+				forces.push_back((Force *)new SpringForce(pVector[i * 5 - 5 + j + 2], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
+				if (j != 2)
+					//spring connecting diagonally to the right
+					forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 4], dist, 0.05, 0.8));
+				if (j != -2)
+					//spring connecting diagonally to the left
+					forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 6], dist, 0.05, 0.8));
+			}
+		}
+	}
 
 	int size = pVector.size();
 
@@ -525,7 +520,6 @@ int main(int argc, char **argv)
 	{
 		pVector[ii]->reset();
 	}
-			//forces.push_back((Force *)new SpringForce(pVector[0], pVector[1], dist, 0.7, 0.8));
 
 	win_x = 512;
 	win_y = 512;
