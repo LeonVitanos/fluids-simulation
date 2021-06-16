@@ -14,6 +14,9 @@
   =======================================================================
 */
 
+#include "Square.h"
+
+#include <vector>
 #include <stdlib.h>
 #include <stdio.h>
 #if defined(__APPLE__)
@@ -28,8 +31,8 @@
 
 /* external definitions (from solver.c) */
 
-extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, float *boundaries);
-extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, float *boundaries);
+extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, float *boundaries, std::vector<BaseObject *> objects);
+extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, float *boundaries, std::vector<BaseObject *> objects);
 
 /* global variables */
 
@@ -42,11 +45,14 @@ static int dvel;
 static float *u, *v, *u_prev, *v_prev;
 static float *dens, *dens_prev;
 static float *curl;
+std::vector<BaseObject *> objects;
 
 static int win_id;
 static int win_x, win_y;
 static int mouse_down[3];
 static int omx, omy, mx, my;
+
+BaseObject *selectedObject;
 
 /*
   ----------------------------------------------------------------------
@@ -80,8 +86,9 @@ static void clear_data(void)
 
 	for (i = 0; i < size; i++)
 	{
-		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] = boundaries[i] = 0.0f;
+		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] /*= boundaries[i] */ = 0.0f;
 	}
+	// objects.clear();
 }
 
 static int allocate_data(void)
@@ -189,7 +196,6 @@ static void draw_density(void)
 	glEnd();
 }
 
-// TODO figure out why this is not working
 static void draw_boundaries(void)
 {
 	glColor3f(.7f, .7f, .7f);
@@ -207,7 +213,6 @@ static void draw_boundaries(void)
 		for (j = 0; j <= N; j++)
 		{
 			if (boundaries[IX(i, j)] == 1)
-
 			{
 				y = (j - 1) * h;
 				// Draw a crossed line to indicate a boundary (for now)
@@ -219,7 +224,6 @@ static void draw_boundaries(void)
 			}
 		}
 	}
-
 	glEnd();
 }
 
@@ -239,7 +243,10 @@ static void get_from_UI(float *d, float *u, float *v)
 	}
 
 	if (!mouse_down[0] && !mouse_down[2])
+	{
+		selectedObject = NULL;
 		return;
+	}
 
 	i = (int)((mx / (float)win_x) * N + 1);
 	j = (int)(((win_y - my) / (float)win_y) * N + 1);
@@ -251,6 +258,22 @@ static void get_from_UI(float *d, float *u, float *v)
 	{
 		u[IX(i, j)] = force * (mx - omx);
 		v[IX(i, j)] = force * (omy - my);
+	}
+
+	if (selectedObject != NULL)
+	{
+		selectedObject->setPosition(i, j);
+		selectedObject->setVelocity((mx - omx), (omy - my));
+	}
+
+	for (int k = 0; k < objects.size(); k++)
+	{
+		if (objects[k]->isOnCell(i, j))
+		{
+			objects[k]->setPosition(i, j);
+			objects[k]->setVelocity(0, 0);
+			selectedObject = objects[k];
+		}
 	}
 
 	if (mouse_down[2])
@@ -318,13 +341,13 @@ static void reshape_func(int width, int height)
 static void idle_func(void)
 {
 	get_from_UI(dens_prev, u_prev, v_prev);
-	for (int j = 10; j < 40; j++)
+	for (int i = 0; i < objects.size(); i++)
 	{
-		boundaries[IX(10, j)] = 1;
+		objects[i]->update();
 	}
 
-	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries);
-	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries);
+	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries, objects);
+	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries, objects);
 
 	glutSetWindow(win_id);
 	glutPostRedisplay();
@@ -340,6 +363,10 @@ static void display_func(void)
 	{
 		draw_density();
 		draw_boundaries();
+		for (int i = 0; i < objects.size(); i++)
+		{
+			objects[i]->draw();
+		}
 	}
 
 	post_display();
@@ -432,6 +459,11 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
+	objects.push_back((BaseObject *)new Square(20, 20, 10, 10, N));
+	for (int j = 10; j < 40; j++)
+	{
+		boundaries[IX(10, j)] = 1;
+	}
 	// Ideally we set up scenes here again
 
 	win_x = 512;

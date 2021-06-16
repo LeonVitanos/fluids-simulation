@@ -15,6 +15,8 @@
 	}
 
 #include <math.h>
+#include <vector>
+#include "BaseObject.h"
 
 void add_source(int N, float *x, float *s, float dt)
 {
@@ -29,7 +31,7 @@ void add_source(int N, float *x, float *s, float dt)
  * @param (float) x: place on the grid (counting from top left to bottom right)
  * @param (float) boundaries: place on the grid where boundaries should be
  */
-void set_bnd(int N, int b, float *x, float *boundaries)
+void set_bnd(int N, int b, float *x, float *boundaries, std::vector<BaseObject *> objects)
 {
 	int i, j;
 
@@ -41,7 +43,6 @@ void set_bnd(int N, int b, float *x, float *boundaries)
 		x[IX(i, N + 1)] = b == 2 ? -x[IX(i, N)] : x[IX(i, N)];
 	}
 	// Create a boundary each block where this is defined
-	// Here we most likely will want to recompute after forces are exerted on boundaries
 	FOR_EACH_CELL
 	if (boundaries[IX(i, j)] == 1)
 	{
@@ -56,13 +57,25 @@ void set_bnd(int N, int b, float *x, float *boundaries)
 	}
 	END_FOR
 
+	// Check all cells for having an object in there
+	for (int o = 0; o < objects.size(); o++)
+	{
+		FOR_EACH_CELL
+		if (objects[o]->isOnCell(i, j))
+		{
+			// Two way coupling start..
+			objects[o]->setVelocity(x[IX(i - 1, j)], -x[IX(i + 1, j)]);
+		}
+		END_FOR
+	}
+
 	x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);
 	x[IX(0, N + 1)] = 0.5f * (x[IX(1, N + 1)] + x[IX(0, N)]);
 	x[IX(N + 1, 0)] = 0.5f * (x[IX(N, 0)] + x[IX(N + 1, 1)]);
 	x[IX(N + 1, N + 1)] = 0.5f * (x[IX(N, N + 1)] + x[IX(N + 1, N)]);
 }
 
-void lin_solve(int N, int b, float *x, float *x0, float a, float c, float *boundaries)
+void lin_solve(int N, int b, float *x, float *x0, float a, float c, float *boundaries, std::vector<BaseObject *> objects)
 {
 	int i, j, k;
 
@@ -71,17 +84,17 @@ void lin_solve(int N, int b, float *x, float *x0, float a, float c, float *bound
 		FOR_EACH_CELL
 		x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
 		END_FOR
-		set_bnd(N, b, x, boundaries);
+		set_bnd(N, b, x, boundaries, objects);
 	}
 }
 
-void diffuse(int N, int b, float *x, float *x0, float diff, float dt, float *boundaries)
+void diffuse(int N, int b, float *x, float *x0, float diff, float dt, float *boundaries, std::vector<BaseObject *> objects)
 {
 	float a = dt * diff * N * N;
-	lin_solve(N, b, x, x0, a, 1 + 4 * a, boundaries);
+	lin_solve(N, b, x, x0, a, 1 + 4 * a, boundaries, objects);
 }
 
-void advect(int N, int b, float *d, float *d0, float *u, float *v, float dt, float *boundaries)
+void advect(int N, int b, float *d, float *d0, float *u, float *v, float dt, float *boundaries, std::vector<BaseObject *> objects)
 {
 	int i, j, i0, j0, i1, j1;
 	float x, y, s0, t0, s1, t1, dt0;
@@ -109,10 +122,10 @@ void advect(int N, int b, float *d, float *d0, float *u, float *v, float dt, flo
 	d[IX(i, j)] = s0 * (t0 * d0[IX(i0, j0)] + t1 * d0[IX(i0, j1)]) +
 				  s1 * (t0 * d0[IX(i1, j0)] + t1 * d0[IX(i1, j1)]);
 	END_FOR
-	set_bnd(N, b, d, boundaries);
+	set_bnd(N, b, d, boundaries, objects);
 }
 
-void project(int N, float *u, float *v, float *p, float *div, float *boundaries)
+void project(int N, float *u, float *v, float *p, float *div, float *boundaries, std::vector<BaseObject *> objects)
 {
 	int i, j;
 
@@ -120,17 +133,17 @@ void project(int N, float *u, float *v, float *p, float *div, float *boundaries)
 	div[IX(i, j)] = -0.5f * (u[IX(i + 1, j)] - u[IX(i - 1, j)] + v[IX(i, j + 1)] - v[IX(i, j - 1)]) / N;
 	p[IX(i, j)] = 0;
 	END_FOR
-	set_bnd(N, 0, div, boundaries);
-	set_bnd(N, 0, p, boundaries);
+	set_bnd(N, 0, div, boundaries, objects);
+	set_bnd(N, 0, p, boundaries, objects);
 
-	lin_solve(N, 0, p, div, 1, 4, boundaries);
+	lin_solve(N, 0, p, div, 1, 4, boundaries, objects);
 
 	FOR_EACH_CELL
 	u[IX(i, j)] -= 0.5f * N * (p[IX(i + 1, j)] - p[IX(i - 1, j)]);
 	v[IX(i, j)] -= 0.5f * N * (p[IX(i, j + 1)] - p[IX(i, j - 1)]);
 	END_FOR
-	set_bnd(N, 1, u, boundaries);
-	set_bnd(N, 2, v, boundaries);
+	set_bnd(N, 1, u, boundaries, objects);
+	set_bnd(N, 2, v, boundaries, objects);
 }
 
 void vorticity_confinement(int N, float *u, float *v, float *u0, float *v0, float *d0, float dt)
@@ -163,28 +176,28 @@ void vorticity_confinement(int N, float *u, float *v, float *u0, float *v0, floa
 }
 
 // Delp/Delt = -(u * D)p + kD^2p + S
-void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, float *boundaries)
+void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, float *boundaries, std::vector<BaseObject *> objects)
 {
 	add_source(N, x, x0, dt); // S
 	SWAP(x0, x);
-	diffuse(N, 0, x, x0, diff, dt, boundaries); // kD^2p
+	diffuse(N, 0, x, x0, diff, dt, boundaries, objects); // kD^2p
 	SWAP(x0, x);
-	advect(N, 0, x, x0, u, v, dt, boundaries); // -(u * D)p
+	advect(N, 0, x, x0, u, v, dt, boundaries, objects); // -(u * D)p
 }
 
-void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, float *boundaries)
+void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, float *boundaries, std::vector<BaseObject *> objects)
 {
 	add_source(N, u, u0, dt);
 	add_source(N, v, v0, dt);
 	vorticity_confinement(N, u, v, u0, v0, d0, dt);
 	SWAP(u0, u);
-	diffuse(N, 1, u, u0, visc, dt, boundaries);
+	diffuse(N, 1, u, u0, visc, dt, boundaries, objects);
 	SWAP(v0, v);
-	diffuse(N, 2, v, v0, visc, dt, boundaries);
-	project(N, u, v, u0, v0, boundaries);
+	diffuse(N, 2, v, v0, visc, dt, boundaries, objects);
+	project(N, u, v, u0, v0, boundaries, objects);
 	SWAP(u0, u);
 	SWAP(v0, v);
-	advect(N, 1, u, u0, u0, v0, dt, boundaries);
-	advect(N, 2, v, v0, u0, v0, dt, boundaries);
-	project(N, u, v, u0, v0, boundaries);
+	advect(N, 1, u, u0, u0, v0, dt, boundaries, objects);
+	advect(N, 2, v, v0, u0, v0, dt, boundaries, objects);
+	project(N, u, v, u0, v0, boundaries, objects);
 }
