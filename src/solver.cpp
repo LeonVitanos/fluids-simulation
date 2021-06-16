@@ -281,7 +281,7 @@ void Compute_Collision(Particle *particle, Vec2f position, Vec2f velocity, std::
 	}
 }
 
-void simulation_step(std::vector<Particle *> pVector, std::vector<Force *> forces, std::vector<Force *> constraints, std::vector<Wall *> walls, float dt, int solver)
+void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particle *> pVector, std::vector<Force *> forces, std::vector<Force *> constraints, std::vector<Wall *> walls, float dt, int solver)
 {
 	int ii, size = pVector.size();
 
@@ -297,6 +297,9 @@ void simulation_step(std::vector<Particle *> pVector, std::vector<Force *> force
 
 		for (ii = 0; ii < size; ii++)
 		{
+			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			//Vec2f add = new Vec2f(0, 0);//(u[IX(i,j)], v[IX(i,j)]);
+			pVector[ii]->m_Force += Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
 			pVector[ii]->m_Velocity += dt * pVector[ii]->m_Force / pVector[ii]->m_Mass; // vdot = f/m
 
 			Compute_Collision(pVector[ii], pVector[ii]->m_Position, pVector[ii]->m_Velocity, walls, dt);

@@ -30,7 +30,7 @@
 
 /* macros */
 
-extern void simulation_step(std::vector<Particle *> pVector, std::vector<Force *> forces, std::vector<Force *> constraints, std::vector<Wall *> walls, float dt, int solver);
+extern void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particle *> pVector, std::vector<Force *> forces, std::vector<Force *> constraints, std::vector<Wall *> walls, float dt, int solver);
 
 #define IX(i, j) ((i) + (N + 2) * (j))
 
@@ -365,7 +365,7 @@ static void idle_func(void)
 
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries);
-	simulation_step(pVector, forces, constraints, walls, dt, 0);
+	simulation_step(N, u, v, dens, pVector, forces, constraints, walls, dt, 0);
 
 	glutSetWindow(win_id);
 	glutPostRedisplay();
