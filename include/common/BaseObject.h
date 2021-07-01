@@ -1,3 +1,5 @@
+#include <vector>
+
 class BaseObject
 {
 public:
@@ -8,4 +10,6 @@ public:
     virtual void setPosition(float x, float y) = 0;
     virtual void setVelocity(float u, float v) = 0;
     virtual bool isOnCell(float x, float y) = 0;
+    virtual std::vector<float> getPosition() = 0;
+    virtual std::vector<float> getVelocity() = 0;
 };

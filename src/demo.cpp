@@ -15,7 +15,6 @@
 */
 
 #include "Square.h"
-
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,17 +28,28 @@
 
 #define IX(i, j) ((i) + (N + 2) * (j))
 
+#define FOR_EACH_CELL            \
+	for (i = 1; i <= N; i++)     \
+	{                            \
+		for (j = 1; j <= N; j++) \
+		{
+#define END_FOR \
+	}           \
+	}
+
 /* external definitions (from solver.c) */
 
-extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, float *boundaries, std::vector<BaseObject *> objects);
-extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, float *boundaries, std::vector<BaseObject *> objects);
+extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, BoundaryCell *boundaries, std::vector<BaseObject *> objects);
+extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, BoundaryCell *boundaries, std::vector<BaseObject *> objects);
+extern void update_velocities(std::vector<BaseObject*> objects, float* u, float* v, float* d, int N);
 
 /* global variables */
 
 static int N;
 static float dt, diff, visc;
 static float force, source;
-static float *boundaries;
+
+BoundaryCell *boundaries;
 static int dvel;
 
 static float *u, *v, *u_prev, *v_prev;
@@ -102,7 +112,7 @@ static int allocate_data(void)
 	dens = (float *)malloc(size * sizeof(float));
 	dens_prev = (float *)malloc(size * sizeof(float));
 	curl = (float *)malloc(size * sizeof(float));
-	boundaries = (float *)malloc(size * sizeof(float));
+	boundaries = (BoundaryCell *)malloc(size * sizeof(BoundaryCell));
 
 	if (!u || !v || !u_prev || !v_prev || !dens || !dens_prev || !curl)
 	{
@@ -196,37 +206,6 @@ static void draw_density(void)
 	glEnd();
 }
 
-static void draw_boundaries(void)
-{
-	glColor3f(.7f, .7f, .7f);
-	glLineWidth(1.0f);
-
-	glBegin(GL_LINES);
-
-	int i, j;
-	float x, y;
-	float h = 1.0f / N;
-
-	for (i = 0; i <= N; i++)
-	{
-		x = (i - 1) * h;
-		for (j = 0; j <= N; j++)
-		{
-			if (boundaries[IX(i, j)] == 1)
-			{
-				y = (j - 1) * h;
-				// Draw a crossed line to indicate a boundary (for now)
-				glColor3f(0.6, 0.2, 0.5);
-				glVertex2f(x, y);
-				glVertex2f(x + h, y + h);
-				glVertex2f(x, y + h);
-				glVertex2f(x + h, y);
-			}
-		}
-	}
-	glEnd();
-}
-
 /*
   ----------------------------------------------------------------------
    relates mouse movements to forces sources
@@ -254,27 +233,30 @@ static void get_from_UI(float *d, float *u, float *v)
 	if (i < 1 || i > N || j < 1 || j > N)
 		return;
 
+
+
 	if (mouse_down[0])
 	{
-		u[IX(i, j)] = force * (mx - omx);
-		v[IX(i, j)] = force * (omy - my);
-	}
-
-	if (selectedObject != NULL)
-	{
-		selectedObject->setPosition(i, j);
-		selectedObject->setVelocity((mx - omx), (omy - my));
-	}
-
-	for (int k = 0; k < objects.size(); k++)
-	{
-		if (objects[k]->isOnCell(i, j))
+        for (int k = 0; k < objects.size(); k++)
+        {
+            if (objects[k]->isOnCell(i, j))
+            {
+                objects[k]->setPosition(i, j);
+                objects[k]->setVelocity(0, 0);
+                selectedObject = objects[k];
+            }
+        }
+		if (selectedObject != NULL)
 		{
-			objects[k]->setPosition(i, j);
-			objects[k]->setVelocity(0, 0);
-			selectedObject = objects[k];
+			selectedObject->setPosition(i, j);
+			selectedObject->setVelocity((mx - omx), (omy - my));
+		} else {
+            u[IX(i, j)] = force * (mx - omx);
+            v[IX(i, j)] = force * (omy - my);
 		}
 	}
+
+//
 
 	if (mouse_down[2])
 	{
@@ -345,7 +327,7 @@ static void idle_func(void)
 	{
 		objects[i]->update();
 	}
-
+    update_velocities(objects, u_prev, v_prev, dens, N);
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries, objects);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries, objects);
 
@@ -355,6 +337,7 @@ static void idle_func(void)
 
 static void display_func(void)
 {
+    int i, j;
 	pre_display();
 
 	if (dvel)
@@ -362,7 +345,9 @@ static void display_func(void)
 	else
 	{
 		draw_density();
-		draw_boundaries();
+		FOR_EACH_CELL
+            boundaries[IX(i,j)].draw();
+		END_FOR
 		for (int i = 0; i < objects.size(); i++)
 		{
 			objects[i]->draw();
@@ -460,9 +445,26 @@ int main(int argc, char **argv)
 	clear_data();
 
 	objects.push_back((BaseObject *)new Square(20, 20, 10, 10, N));
-	for (int j = 10; j < 40; j++)
+	for (int j = 20; j < 40; j++)
 	{
-		boundaries[IX(10, j)] = 1;
+		boundaries[IX(20, j)].b_left = true;
+		boundaries[IX(20,j)].b_x = 20;
+		boundaries[IX(20,j)].b_y = j;
+        boundaries[IX(39, j)].b_right = true;
+
+        boundaries[IX(40,j)].b_x = 40;
+        boundaries[IX(40,j)].b_y = j;
+
+
+    }
+	for (int i = 20; i < 40; i++) {
+        boundaries[IX(i, 20)].b_bottom = true;
+
+        boundaries[IX(i, 20)].b_x = i;
+        boundaries[IX(i, 20)].b_y = 20;
+        boundaries[IX(i, 39)].b_top = true;
+        boundaries[IX(i, 40)].b_x = i;
+        boundaries[IX(i, 40)].b_y = 40;
 	}
 	// Ideally we set up scenes here again
 

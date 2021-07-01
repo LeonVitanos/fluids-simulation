@@ -1,4 +1,5 @@
 #include "BaseObject.h"
+#include "Boundary.h"
 
 class Square : BaseObject
 {
@@ -16,6 +17,9 @@ public:
     void setPosition(float x, float y) override;
     void setVelocity(float u, float v) override;
     bool isOnCell(float x, float y) override;
+    std::vector<float> getPosition();
+    std::vector<float> getVelocity();
+    std::vector<float> getBoundaries();
 
 private:
     float o_x;
