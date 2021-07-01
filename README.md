@@ -15,3 +15,11 @@ Simulation in Computer Graphics Project Part 1
 - Then run `cmake -B build`
 - Next `cmake --build build`
 - And lastly, to run, `./build/2imv15_project_1`
+
+## Next steps:
+
+- [ ] Add boundaries to the objects
+- [ ] (maybe) have a second look at the fluid movement of the objects
+- [ ] Rotations
+- [ ] Two-way coupling
+- [ ] Particles and boundaries

@@ -29,7 +29,10 @@ set(HEADER_FILES
 
 set(SOURCE_FILES
         src/demo.cpp
-        src/solver.cpp)
+        src/solver.cpp
+        src/Square.cpp
+        src/Boundary.cpp
+        src/BaseObject.cpp)
 
 #set(LIBRARY_FILES
 #        lib/x64/libfreeglut.a
