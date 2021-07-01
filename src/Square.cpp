@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -37,12 +38,13 @@ void Square::draw()
 
 void Square::update()
 {
-
     float h = 1.0f / grid_size;
     float x1 = (o_x - o_w / 2 - 0.5f) * h;
     float x2 = (o_x + o_w / 2 + 0.5f) * h;
     float y1 = (o_y - o_h / 2 - 0.5f) * h;
     float y2 = (o_y + o_h / 2 + 0.5f) * h;
+
+    //std::cout << x2 << " " << x1 << " " << y2 << " " << y1 << std::endl;
 
     // Put square back in boundaries as its not allowed to leave
     if (x2 >= 1)
@@ -83,12 +85,8 @@ bool Square::isOnCell(float x, float y)
     float x2 = (o_x + o_w / 2);
     float y1 = (o_y - o_h / 2);
     float y2 = (o_y + o_h / 2);
-    if (x <= x2 && y <= y2 && y >= y1 && x >= x1)
-    {
-        return true;
-    }
-    else
-        return false;
+
+    return (x <= x2 && y <= y2 && y >= y1 && x >= x1);
 }
 
 /**

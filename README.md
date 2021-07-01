@@ -19,6 +19,8 @@ Simulation in Computer Graphics Project Part 1
 ## Next steps:
 
 - [ ] Add boundaries to the objects
+  - [ ] Fix crashing when moving object to top
+  - [ ] Moving object e.g to the right, makes it go to the left (max dis=distance to center of object)
 - [ ] (maybe) have a second look at the fluid movement of the objects
 - [ ] Rotations
 - [ ] Two-way coupling

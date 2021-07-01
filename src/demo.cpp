@@ -18,6 +18,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
 #else
@@ -321,10 +322,46 @@ static void reshape_func(int width, int height)
 }
 
 static void idle_func(void)
-{
+{	
 	get_from_UI(dens_prev, u_prev, v_prev);
+
+	//Clear boundaries
+	for (int i=0; i<=N+1; i++){
+		for (int j=0; j<=N+1; j++){
+			boundaries[IX(i, j)].b_left = false;
+			boundaries[IX(i, j)].b_right = false;
+			boundaries[IX(i, j)].b_bottom = false;
+			boundaries[IX(i, j)].b_top = false;
+			boundaries[IX(i, j)].b_x = 0;
+			boundaries[IX(i, j)].b_y = 0;
+		}
+	}
+
 	for (int i = 0; i < objects.size(); i++)
 	{
+		// Update boundaries
+		std::vector<float> pos = objects[i]->getPosition();
+
+		for (int j = pos[3]+1; j < pos[1]+2; j++)
+		{
+			boundaries[IX((int)pos[0], j)].b_left = true;
+			boundaries[IX((int)pos[0],j)].b_x = pos[0]+1;
+			boundaries[IX((int)pos[0],j)].b_y = j;
+			boundaries[IX((int)pos[2]+1, j)].b_right = true;
+			boundaries[IX((int)pos[2]+1,j)].b_x = pos[2]+2;
+			boundaries[IX((int)pos[2]+1,j)].b_y = j;
+		}
+
+		for (int i = pos[0]+1; i < pos[2]+2; i++) {
+			boundaries[IX(i, (int)pos[1]+1)].b_bottom = true;
+			boundaries[IX(i, (int)pos[1])+1].b_x = i;
+			boundaries[IX(i, (int)pos[1])+1].b_y = pos[1]+2;
+			boundaries[IX(i, (int)pos[3])].b_top = true;
+			boundaries[IX(i, (int)pos[3])].b_x = i;
+			boundaries[IX(i, (int)pos[3])].b_y = pos[3]+1;
+		}
+
+		// Update object position
 		objects[i]->update();
 	}
     update_velocities(objects, u_prev, v_prev, dens, N);
@@ -444,28 +481,27 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-	objects.push_back((BaseObject *)new Square(20, 20, 10, 10, N));
+	objects.push_back((BaseObject *)new Square(20, 20, 20, 20, N));
+	objects.push_back((BaseObject *)new Square(7, 7, 10, 10, N));
+
+/*
 	for (int j = 20; j < 40; j++)
 	{
 		boundaries[IX(20, j)].b_left = true;
 		boundaries[IX(20,j)].b_x = 20;
 		boundaries[IX(20,j)].b_y = j;
         boundaries[IX(39, j)].b_right = true;
-
         boundaries[IX(40,j)].b_x = 40;
         boundaries[IX(40,j)].b_y = j;
-
-
     }
 	for (int i = 20; i < 40; i++) {
         boundaries[IX(i, 20)].b_bottom = true;
-
         boundaries[IX(i, 20)].b_x = i;
         boundaries[IX(i, 20)].b_y = 20;
         boundaries[IX(i, 39)].b_top = true;
         boundaries[IX(i, 40)].b_x = i;
         boundaries[IX(i, 40)].b_y = 40;
-	}
+	}*/
 	// Ideally we set up scenes here again
 
 	win_x = 512;
