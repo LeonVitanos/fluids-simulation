@@ -1,4 +1,4 @@
-#include "Square.h"
+#include "SquareRigid.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,11 +10,18 @@
 #include <GL/glut.h>
 #endif
 
-Square::Square(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N) {
+SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N) {
+    M=4;
+    torque=0;
+    R=Mat2(1.0, 0.0, 0.0, 1.0);
 
+
+    // Calculate Ibody and Ibodyinv before simulation starts
+    Ibody = M/12 * pow(o_w, 2) + pow(o_h, 2);
+	//Ibodyinv = Ibody.inverse();
 }
 
-void Square::draw()
+void SquareRigid::draw()
 {
     glLineWidth(1.0f);
     glBegin(GL_QUADS);
@@ -24,7 +31,13 @@ void Square::draw()
     float x2 = (o_x + o_w / 2 + 0.5f) * h;
     float y1 = (o_y - o_h / 2 - 0.5f) * h;
     float y2 = (o_y + o_h / 2 + 0.5f) * h;
-    glColor3f(0.6, 0.2, 0.4);
+
+    //x1=0.9*x1 + o_x;
+    //x2=0.9*x2 + o_x;
+    //y1=0.9*y1 + o_y;
+    //y2=0.9*y2 + o_y;
+
+    glColor3f(0.6, 0.2, 0.4);    
     glVertex2f(x1, y1);
     glVertex2f(x1, y2);
     glVertex2f(x2, y2);
@@ -32,7 +45,7 @@ void Square::draw()
     glEnd();
 }
 
-void Square::update()
+void SquareRigid::update()
 {
     float h = 1.0f / grid_size;
     float x1 = (o_x - o_w / 2 - 0.5f) * h;
@@ -51,19 +64,19 @@ void Square::update()
         o_y = o_h / 2 + 0.5f;
 }
 
-void Square::setPosition(float x, float y)
+void SquareRigid::setPosition(float x, float y)
 {
     o_x = x;
     o_y = y;
 }
 
-void Square::setVelocity(float u, float v)
+void SquareRigid::setVelocity(float u, float v)
 {
     o_u = u;
     o_v = v;
 }
 
-bool Square::isOnCell(float x, float y)
+bool SquareRigid::isOnCell(float x, float y)
 {
     float h = 1.0f / grid_size;
     float x1 = (o_x - o_w / 2);
@@ -78,7 +91,7 @@ bool Square::isOnCell(float x, float y)
  *
  * @return Array[4]: 0: left x, 1: top y, 2: right x, 3: bottom y
  */
-std::vector<float> Square::getPosition()
+std::vector<float> SquareRigid::getPosition()
 {
     std::vector<float> vec;
     vec.push_back(o_x - o_w / 2);
@@ -88,7 +101,7 @@ std::vector<float> Square::getPosition()
     return vec;
 }
 
-std::vector<float> Square::getVelocity()
+std::vector<float> SquareRigid::getVelocity()
 {
     std::vector<float> vec;
     vec.push_back(o_u);

@@ -14,7 +14,7 @@
   =======================================================================
 */
 
-#include "Square.h"
+#include "SquareRigid.h"
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
@@ -326,6 +326,8 @@ static void idle_func(void)
 	get_from_UI(dens_prev, u_prev, v_prev);
 
 	//Clear boundaries
+	//boundaries = NULL;
+	//boundaries = (BoundaryCell *)malloc((N + 2) * (N + 2) * sizeof(BoundaryCell));
 	for (int i=0; i<=N+1; i++){
 		for (int j=0; j<=N+1; j++){
 			boundaries[IX(i, j)].b_left = false;
@@ -341,6 +343,7 @@ static void idle_func(void)
 	{
 		// Update boundaries
 		std::vector<float> pos = objects[i]->getPosition();
+		//std::cout << pos[0] << " " << pos[1] << " " << pos[2] << " " << pos[3] << std::endl;;
 
 		for (int j = pos[3]+1; j < pos[1]+2; j++)
 		{
@@ -364,6 +367,7 @@ static void idle_func(void)
 		// Update object position
 		objects[i]->update();
 	}
+
     update_velocities(objects, u_prev, v_prev, dens, N);
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries, objects);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries, objects);
@@ -481,8 +485,8 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-	objects.push_back((BaseObject *)new Square(20, 20, 20, 20, N));
-	objects.push_back((BaseObject *)new Square(7, 7, 10, 10, N));
+	objects.push_back((BaseObject *)new Square(20, 20, 20, 16, N));
+	objects.push_back((BaseObject *)new SquareRigid(7, 7, 10, 15, N));
 
 /*
 	for (int j = 20; j < 40; j++)

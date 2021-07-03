@@ -31,6 +31,7 @@ set(SOURCE_FILES
         src/demo.cpp
         src/solver.cpp
         src/Square.cpp
+        src/SquareRigid.cpp
         src/Boundary.cpp
         src/BaseObject.cpp)
 

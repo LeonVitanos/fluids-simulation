@@ -21,6 +21,7 @@ Simulation in Computer Graphics Project Part 1
 - [ ] Add boundaries to the objects
   - [ ] Fix crashing when moving object to top
   - [ ] Moving object e.g to the right, makes it go to the left (max dis=distance to center of object)
+  - [ ] Moving object will go inside a bigger object
 - [ ] (maybe) have a second look at the fluid movement of the objects
 - [ ] Rotations
 - [ ] Two-way coupling
