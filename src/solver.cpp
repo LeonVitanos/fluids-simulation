@@ -313,6 +313,8 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 		for (ii = 0; ii < size; ii++)
 		{ //Half euler step
 			initial.push_back(pVector[ii]);
+			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
 			pVector[ii]->m_Velocity += (dt / 2) * pVector[ii]->m_Force / pVector[ii]->m_Mass; // vdot = f/m
 			//pVector[ii]->m_Position += (dt / 2) * pVector[ii]->m_Velocity;					  // xdot=v
 
@@ -325,6 +327,8 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 
 		for (ii = 0; ii < size; ii++)
 		{
+			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
 			pVector[ii]->m_Velocity = initial[ii]->m_Velocity + dt * pVector[ii]->m_Force / pVector[ii]->m_Mass; // vdot = f/m
 			//pVector[ii]->m_Position = initial[ii]->m_Position + dt * pVector[ii]->m_Velocity;					 // xdot=v
 
@@ -337,17 +341,16 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 		std::vector<Vec2f> p1, p2, p3, p4, v1, v2, v3, v4;
 
 		Clear_Forces(pVector);
-
-		for (ii = 0; ii < size; ii++)
-		{
-			initial.push_back(pVector[ii]);
-		}
-
 		Compute_Forces(forces);
 		ConstraintSolver(pVector, constraints).calculate();
 
 		for (ii = 0; ii < size; ii++)
 		{
+			initial.push_back(pVector[ii]);
+
+			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
+			
 			p1.push_back(pVector[ii]->m_Velocity);
 			v1.push_back(pVector[ii]->m_Force / pVector[ii]->m_Mass);
 
@@ -363,6 +366,9 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 
 		for (ii = 0; ii < size; ii++)
 		{
+			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
+
 			p2.push_back(pVector[ii]->m_Velocity);
 			v2.push_back(pVector[ii]->m_Force / pVector[ii]->m_Mass);
 
@@ -378,6 +384,9 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 
 		for (ii = 0; ii < size; ii++)
 		{
+			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
+
 			p3.push_back(pVector[ii]->m_Velocity);
 			v3.push_back(pVector[ii]->m_Force / pVector[ii]->m_Mass);
 
@@ -393,6 +402,9 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 
 		for (ii = 0; ii < size; ii++)
 		{
+			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
+			
 			p4.push_back(pVector[ii]->m_Velocity);
 			v4.push_back(pVector[ii]->m_Force / pVector[ii]->m_Mass);
 

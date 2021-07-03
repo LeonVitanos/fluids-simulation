@@ -365,7 +365,7 @@ static void idle_func(void)
 
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries);
-	simulation_step(N, u, v, dens, pVector, forces, constraints, walls, dt, 0);
+	simulation_step(N, u, v, dens, pVector, forces, constraints, walls, dt, 2);
 
 	glutSetWindow(win_id);
 	glutPostRedisplay();
