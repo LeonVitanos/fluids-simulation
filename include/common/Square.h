@@ -1,4 +1,5 @@
 #include "BaseObject.h"
+#include "gfx/mat2.h"
 
 class Square : BaseObject
 {
@@ -18,6 +19,7 @@ public:
     bool isOnCell(float x, float y) override;
     std::vector<float> getPosition();
     std::vector<float> getVelocity();
+    std::vector<Vec2f> coordinates;
 
 private:
     float o_x;

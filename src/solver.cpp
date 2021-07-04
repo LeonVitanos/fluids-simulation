@@ -92,23 +92,31 @@ void set_bnd(int N, int b, float *x, float *u, float *v, BoundaryCell *boundarie
 	}
 	// Create a boundary each block where this is defined
 	FOR_EACH_CELL
+	bool change = false;
+	float vel = 0.0f;
 
 	if (boundaries[IX(i, j)].b_left)
 	{
-		x[IX(i, j)] = b == 1 ? -x[IX(i, j)] : 0;
+		vel -= b == 1 ? x[IX(i - 1, j)] : 0;
+		change = true;
 	}
 	if (boundaries[IX(i, j)].b_right)
 	{
-		x[IX(i, j)] = b == 1 ? -x[IX(i, j)] : 0;
+		vel -= b == 1 ? x[IX(i + 1, j)] : 0;
+		change = true;
 	}
 	if (boundaries[IX(i, j)].b_top)
 	{
-		x[IX(i, j)] = b == 2 ? -x[IX(i, j)] : 0;
+		vel -= b == 2 ? x[IX(i, j + 1)] : 0;
+		change = true;
 	}
 	if (boundaries[IX(i, j)].b_bottom)
 	{
-		x[IX(i, j)] = b == 2 ? -x[IX(i, j)] : 0;
+		vel -= b == 2 ? x[IX(i, j - 1)] : 0;
+		change = true;
 	}
+
+	if (change) x[IX(i, j)] = vel;
 	END_FOR
 
 	x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);

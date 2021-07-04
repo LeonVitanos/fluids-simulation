@@ -76,6 +76,27 @@ void SquareRigid::draw()
     glVertex2f(coordinates[3][0], coordinates[3][1]);
     glVertex2f(coordinates[0][0], coordinates[0][1]);
     glEnd();
+
+    int i, j;
+    FOR_EACH_CELL
+        if (isOnCell(i, j)) {
+            glBegin(GL_QUADS);
+            glColor3f(0.1, 0.3, 0.4);
+            // Bottom left to bottom right
+            glVertex2f(i * h, j * h);
+            glVertex2f((i + 1) * h, j * h);
+            // Bottom right to top right
+            glVertex2f((i + 1) * h, j * h);
+            glVertex2f((i + 1) * h, (j + 1) * h);
+            // Top right to top left
+            glVertex2f((i + 1) * h, (j + 1) * h);
+            glVertex2f(i * h, (j + 1) * h);
+            // Top left to bottom left
+            glVertex2f(i * h, (j + 1) * h);
+            glVertex2f(i * h, j * h);
+            glEnd();
+        }
+    END_FOR
 }
 
 void SquareRigid::update(BoundaryCell *boundaries, float dt)
@@ -175,22 +196,6 @@ bool SquareRigid::isOnCell(float x, float y)
 
         if (sign > 0) return false;
     }
-
-    glBegin(GL_QUADS);
-    glColor3f(0.1, 0.3, 0.4);
-    // Bottom left to bottom right
-    glVertex2f(x * h, y * h);
-    glVertex2f((x + 1) * h, y * h);
-    // Bottom right to top right
-    glVertex2f((x + 1) * h, y * h);
-    glVertex2f((x + 1) * h, (y + 1) * h);
-    // Top right to top left
-    glVertex2f((x + 1) * h, (y + 1) * h);
-    glVertex2f(x * h, (y + 1) * h);
-    // Top left to bottom left
-    glVertex2f(x * h, (y + 1) * h);
-    glVertex2f(x * h, y * h);
-    glEnd();
 
     return true;
     /*float x1 = (o_x - o_w / 2);

@@ -470,8 +470,8 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-//	objects.push_back((BaseObject *)new Square(20, 20, 20, 16, N));
-	objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
+	objects.push_back((BaseObject *)new Square(20, 20, 20, 20, N));
+	//objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
 
 	/*
 	for (int j = 20; j < 40; j++)
