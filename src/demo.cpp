@@ -14,8 +14,11 @@
   =======================================================================
 */
 
+#include "SquareRigid.h"
+#include <vector>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
 #else
@@ -23,7 +26,7 @@
 #endif
 
 #include <vector>
-#include "Particle.h" 
+#include "Particle.h"
 #include "Force.h"
 #include "SpringForce.h"
 #include "Wall.h"
@@ -34,33 +37,46 @@ extern void simulation_step(int N, float *u, float *v, float *dens, std::vector<
 
 #define IX(i, j) ((i) + (N + 2) * (j))
 
+#define FOR_EACH_CELL            \
+	for (i = 1; i <= N; i++)     \
+	{                            \
+		for (j = 1; j <= N; j++) \
+		{
+#define END_FOR \
+	}           \
+	}
+
 /* external definitions (from solver.c) */
 
-extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, float *boundaries);
-extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, float *boundaries);
+extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, BoundaryCell *boundaries, std::vector<BaseObject *> objects);
+extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, BoundaryCell *boundaries, std::vector<BaseObject *> objects);
+extern void update_velocities(std::vector<BaseObject *> objects, float *u, float *v, float *d, int N);
 
 /* global variables */
 
 static int N;
 static float dt, diff, visc;
 static float force, source;
-static float *boundaries;
+
+BoundaryCell *boundaries;
 static int dvel;
 
 static float *u, *v, *u_prev, *v_prev;
 static float *dens, *dens_prev;
 static float *curl;
+std::vector<BaseObject *> objects;
 
 static int win_id;
 static int win_x, win_y;
 static int mouse_down[3];
 static int omx, omy, mx, my;
 
+BaseObject *selectedObject;
 std::vector<Particle *> pVector;
 std::vector<Force *> forces;
 std::vector<Force *> constraints;
 std::vector<Wall *> walls;
-bool drawForces [7] = {false, false, false, false, false, false, false};
+bool drawForces[7] = {false, false, false, false, false, false, false};
 
 /*
   ----------------------------------------------------------------------
@@ -94,7 +110,7 @@ static void clear_data(void)
 
 	for (i = 0; i < size; i++)
 	{
-		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] = boundaries[i] = 0.0f;
+		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] /*= boundaries[i]*/ = 0.0f;
 	}
 
 	int ii;
@@ -117,7 +133,7 @@ static int allocate_data(void)
 	dens = (float *)malloc(size * sizeof(float));
 	dens_prev = (float *)malloc(size * sizeof(float));
 	curl = (float *)malloc(size * sizeof(float));
-	boundaries = (float *)malloc(size * sizeof(float));
+	boundaries = (BoundaryCell *)malloc(size * sizeof(BoundaryCell));
 
 	if (!u || !v || !u_prev || !v_prev || !dens || !dens_prev || !curl)
 	{
@@ -211,41 +227,8 @@ static void draw_density(void)
 	glEnd();
 }
 
-// TODO figure out why this is not working
-static void draw_boundaries(void)
+static void draw_particles(void)
 {
-	glColor3f(.7f, .7f, .7f);
-	glLineWidth(1.0f);
-
-	glBegin(GL_LINES);
-
-	int i, j;
-	float x, y;
-	float h = 1.0f / N;
-
-	for (i = 0; i <= N; i++)
-	{
-		x = (i - 1) * h;
-		for (j = 0; j <= N; j++)
-		{
-			if (boundaries[IX(i, j)] == 1)
-
-			{
-				y = (j - 1) * h;
-				// Draw a crossed line to indicate a boundary (for now)
-				glColor3f(0.6, 0.2, 0.5);
-				glVertex2f(x, y);
-				glVertex2f(x + h, y + h);
-				glVertex2f(x, y + h);
-				glVertex2f(x + h, y);
-			}
-		}
-	}
-
-	glEnd();
-}
-
-static void draw_particles(void) {
 	int size = pVector.size();
 
 	for (int ii = 0; ii < size; ii++)
@@ -254,7 +237,8 @@ static void draw_particles(void) {
 	}
 }
 
-static void draw_forces(void) {
+static void draw_forces(void)
+{
 	int size = forces.size();
 
 	for (int ii = 0; ii < size; ii++)
@@ -279,7 +263,10 @@ static void get_from_UI(float *d, float *u, float *v)
 	}
 
 	if (!mouse_down[0] && !mouse_down[2])
+	{
+		selectedObject = NULL;
 		return;
+	}
 
 	i = (int)((mx / (float)win_x) * N + 1);
 	j = (int)(((win_y - my) / (float)win_y) * N + 1);
@@ -289,10 +276,26 @@ static void get_from_UI(float *d, float *u, float *v)
 
 	if (mouse_down[0])
 	{
-		u[IX(i, j)] = force * (mx - omx);
-		v[IX(i, j)] = force * (omy - my);
+		for (int k = 0; k < objects.size(); k++)
+		{
+			if (objects[k]->isOnCell(i, j))
+			{
+				objects[k]->setPosition(i, j);
+				objects[k]->setVelocity(0, 0);
+				selectedObject = objects[k];
+			}
+		}
+		if (selectedObject != NULL)
+		{
+			selectedObject->setPosition(i, j);
+			selectedObject->setVelocity((mx - omx), (omy - my));
+		}
+		else
+		{
+			u[IX(i, j)] = force * (mx - omx);
+			v[IX(i, j)] = force * (omy - my);
+		}
 	}
-
 	if (mouse_down[2])
 	{
 		d[IX(i, j)] = source;
@@ -358,13 +361,22 @@ static void reshape_func(int width, int height)
 static void idle_func(void)
 {
 	get_from_UI(dens_prev, u_prev, v_prev);
-	for (int j = 10; j < 40; j++)
+	int i, j;
+
+	//Clear boundaries
+	FOR_EACH_CELL
+	boundaries[IX(i, j)].clear();
+	END_FOR
+
+	// Update object position and its boundaries
+	for (int i = 0; i < objects.size(); i++)
 	{
-		boundaries[IX(10, j)] = 1;
+		objects[i]->update(boundaries, dt);
 	}
 
-	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries);
-	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries);
+	update_velocities(objects, u_prev, v_prev, dens, N);
+	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries, objects);
+	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries, objects);
 	simulation_step(N, u, v, dens, pVector, forces, constraints, walls, dt, 2);
 
 	glutSetWindow(win_id);
@@ -373,6 +385,8 @@ static void idle_func(void)
 
 static void display_func(void)
 {
+	int i, j;
+	float h = 1.0f / N;
 	pre_display();
 
 	if (dvel)
@@ -380,7 +394,16 @@ static void display_func(void)
 	else
 	{
 		draw_density();
-		draw_boundaries();
+		/*FOR_EACH_CELL
+		boundaries[IX(i, j)].draw();
+		END_FOR*/
+		for (int k = 0; k < objects.size(); k++)
+		{
+			FOR_EACH_CELL
+			objects[k]->isOnCell(i, j);
+			END_FOR
+			objects[k]->draw();
+		}
 		draw_particles();
 		draw_forces();
 	}
@@ -475,8 +498,13 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-	// Ideally we set up scenes here again
+	// Square
+//	objects.push_back((BaseObject *)new Square(20, 20, 10, 10, N));
 
+	// Rigid Square
+//	objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
+//
+//	// Cloth
 	const double dist = 0.05;
 	Vec2f center(0.0, 0.0);
 	const Vec2f offset(dist, 0.0);
@@ -520,6 +548,7 @@ int main(int argc, char **argv)
 	{
 		pVector[ii]->reset();
 	}
+	// End Cloth
 
 	win_x = 512;
 	win_y = 512;

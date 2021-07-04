@@ -53,7 +53,11 @@ set(SOURCE_FILES
         src/ConstraintSolver.cpp
         src/Wall.cpp
         src/demo.cpp
-        src/solver.cpp)
+        src/solver.cpp
+        src/Square.cpp
+        src/SquareRigid.cpp
+        src/Boundary.cpp
+        src/BaseObject.cpp)
 
 #set(LIBRARY_FILES
 #        lib/x64/libfreeglut.a
