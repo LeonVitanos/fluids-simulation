@@ -404,7 +404,6 @@ static void display_func(void)
 			END_FOR
 			objects[k]->draw();
 		}
-		draw_boundaries();
 		draw_particles();
 		draw_forces();
 	}
@@ -499,29 +498,13 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-	objects.push_back((BaseObject *)new Square(20, 20, 10, 10, N));
-	//objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
+	// Square
+//	objects.push_back((BaseObject *)new Square(20, 20, 10, 10, N));
 
-	/*
-	for (int j = 20; j < 40; j++)
-	{
-		boundaries[IX(20, j)].b_left = true;
-		boundaries[IX(20,j)].b_x = 20;
-		boundaries[IX(20,j)].b_y = j;
-        boundaries[IX(39, j)].b_right = true;
-        boundaries[IX(40,j)].b_x = 40;
-        boundaries[IX(40,j)].b_y = j;
-    }
-	for (int i = 20; i < 40; i++) {
-        boundaries[IX(i, 20)].b_bottom = true;
-        boundaries[IX(i, 20)].b_x = i;
-        boundaries[IX(i, 20)].b_y = 20;
-        boundaries[IX(i, 39)].b_top = true;
-        boundaries[IX(i, 40)].b_x = i;
-        boundaries[IX(i, 40)].b_y = 40;
-	}*/
-	// Ideally we set up scenes here again
-
+	// Rigid Square
+//	objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
+//
+//	// Cloth
 	const double dist = 0.05;
 	Vec2f center(0.0, 0.0);
 	const Vec2f offset(dist, 0.0);
@@ -565,6 +548,7 @@ int main(int argc, char **argv)
 	{
 		pVector[ii]->reset();
 	}
+	// End Cloth
 
 	win_x = 512;
 	win_y = 512;

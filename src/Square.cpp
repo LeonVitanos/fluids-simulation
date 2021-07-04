@@ -115,35 +115,6 @@ void Square::update(BoundaryCell *boundaries, float dt)
         }
     END_FOR
 
-    /*for (int j = pos[3]; j < pos[1]; j++)
-    {
-        boundaries[IX((int)pos[0], j)].b_left = true;
-        boundaries[IX((int)pos[0],j)].b_x = pos[0];
-        boundaries[IX((int)pos[0],j)].b_y = j;
-        boundaries[IX((int)pos[2]-1, j)].b_right = true;
-        boundaries[IX((int)pos[2],j)].b_x = pos[2];
-        boundaries[IX((int)pos[2],j)].b_y = j;
-    }
-
-    for (int i = pos[0]; i < pos[2]; i++) {
-        boundaries[IX(i, (int)pos[1])].b_bottom = true;
-        boundaries[IX(i, (int)pos[1])].b_x = i;
-        boundaries[IX(i, (int)pos[1])].b_y = pos[1];
-        boundaries[IX(i, (int)pos[3] - 1)].b_top = true;
-        boundaries[IX(i, (int)pos[3])].b_x = i;
-        boundaries[IX(i, (int)pos[3])].b_y = pos[3];
-    }
-
-    // Put square back in boundaries as its not allowed to leave
-    if (x2 >= 1)
-        o_x = grid_size - o_w / 2 - 0.5f;
-    if (x1 <= 0)
-        o_x = o_w / 2 + 0.5f;
-    if (y2 >= 1)
-        o_y = grid_size - o_h / 2 - 0.5f;
-    if (y1 <= 0)
-        o_y = o_h / 2 + 0.5f;
-    */
 }
 
 void Square::setPosition(float x, float y)
