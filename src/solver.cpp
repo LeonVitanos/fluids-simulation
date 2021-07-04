@@ -348,7 +348,7 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 		{
 			initial.push_back(pVector[ii]);
 
-			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			int i = floor(pVector[ii]->m_Position[0] * N), j = floor(pVector[ii]->m_Position[1] * N);
 			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
 			
 			p1.push_back(pVector[ii]->m_Velocity);
@@ -366,7 +366,7 @@ void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particl
 
 		for (ii = 0; ii < size; ii++)
 		{
-			int i = ceil(pVector[ii]->m_Position[0] * N), j = ceil(pVector[ii]->m_Position[1] * N);
+			int i = floor(pVector[ii]->m_Position[0] * N), j = floor(pVector[ii]->m_Position[1] * N);
 			pVector[ii]->m_Force += 0.1f * Vec2f(u[IX(i,j)], v[IX(i,j)]) * dens[IX(i,j)];
 
 			p2.push_back(pVector[ii]->m_Velocity);
