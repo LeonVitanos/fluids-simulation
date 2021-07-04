@@ -97,8 +97,20 @@ static void clear_data(void)
 
 	for (i = 0; i < size; i++)
 	{
-		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] /*= boundaries[i] */ = 0.0f;
+		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] /*= boundaries[i]*/ = 0.0f;
+		/*boundaries[i].b_bottom = false;
+		boundaries[i].b_left = false;
+		boundaries[i].b_right = false;
+		boundaries[i].b_top = false;*/
 	}
+	/*int j;
+	FOR_EACH_CELL
+		boundaries[i].b_bottom = false;
+		boundaries[i].b_left = false;
+		boundaries[i].b_right = false;
+		boundaries[i].b_top = false;
+	END_FOR*/
+
 	// objects.clear();
 }
 

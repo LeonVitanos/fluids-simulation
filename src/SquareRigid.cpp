@@ -10,6 +10,17 @@
 #include <GL/glut.h>
 #endif
 
+#define IX(i, j) ((i) + (grid_size + 2) * (j))
+
+#define FOR_EACH_CELL            \
+	for (i = 1; i <= grid_size; i++)     \
+	{                            \
+		for (j = 1; j <= grid_size; j++) \
+		{
+#define END_FOR \
+	}           \
+	}
+
 SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N)
 {
     //o_x = 0.0f;
@@ -24,6 +35,7 @@ SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x
     coordinates.push_back(Vec2f(x2, y1));
     coordinates.push_back(Vec2f(x2, y2));
     coordinates.push_back(Vec2f(x1, y2));
+    cells = (bool *)malloc((N+2) * (N+2) * sizeof(bool));
 }
 
 void SquareRigid::draw()
@@ -68,6 +80,12 @@ void SquareRigid::draw()
 
 void SquareRigid::update(BoundaryCell *boundaries, float dt)
 {
+    // Works fine the first time, core dumped second time.
+    /*int size = (grid_size + 2) * (grid_size + 2);
+    for (int i; i < size; i++) {
+        cells[i] = false;
+    }*/
+
     float h = 1.0f / grid_size;
     float tempX;
     float tempY;
@@ -86,6 +104,36 @@ void SquareRigid::update(BoundaryCell *boundaries, float dt)
         //fprintf(stderr, "Coordinates: X=%g Y=%g rotation=%g i=%d\n",
         //        coordinates[i][0], coordinates[i][1], rotation, i);
     }
+
+    /*int i, j;
+    FOR_EACH_CELL
+        if (isOnCell(i, j)) cells[IX(i, j)] = true;
+    END_FOR
+
+    FOR_EACH_CELL
+        if (!cells[IX(i + 1, j)]) {
+            boundaries[IX(i, j)].b_right = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
+        }
+        if (!cells[IX(i - 1, j)]) {
+            boundaries[IX(i, j)].b_left = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
+        }
+        if (!cells[IX(i, j + 1)]) {
+            boundaries[IX(i, j)].b_top = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
+        }
+        if (!cells[IX(i, j - 1)]) {
+            boundaries[IX(i, j)].b_bottom = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
+        }
+    END_FOR*/
+
+
     //
     //    float h = 1.0f / grid_size;
     //    float x1 = (o_x - o_w / 2 + rotation[0]) * h;
@@ -110,8 +158,8 @@ bool SquareRigid::isOnCell(float x, float y)
 {
     float h = 1.0f / grid_size;
 
-    float c_x = (x + o_w / 2) * h;
-    float c_y = (y + o_h / 2) * h;
+    float c_x = (x + 1 / 2) * h;
+    float c_y = (y + 1 / 2) * h;
 
     float sign;
 

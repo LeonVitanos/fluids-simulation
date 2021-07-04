@@ -35,4 +35,5 @@ private:
     int o_h;
     int o_w;
     int grid_size;
+    bool *cells;
 };
