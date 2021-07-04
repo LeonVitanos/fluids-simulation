@@ -12,10 +12,6 @@
 
 SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N)
 {
-    /*rotation.push_back(0);
-    rotation.push_back(0);
-    rotation.push_back(0);
-    rotation.push_back(0);*/
     rotation = 0.0f;
     float h = 1.0f / grid_size;
     x1 = (-o_w / 2) * h;
@@ -101,12 +97,17 @@ void SquareRigid::setVelocity(float u, float v)
 bool SquareRigid::isOnCell(float x, float y)
 {
     float h = 1.0f / grid_size;
-    float x1 = (o_x - o_w / 2);
+
+    float c_x = (x + o_w / 2) * h;
+    float c_y = (y + o_h / 2) * h;
+
+    return false;
+    /*float x1 = (o_x - o_w / 2);
     float x2 = (o_x + o_w / 2);
     float y1 = (o_y - o_h / 2);
     float y2 = (o_y + o_h / 2);
 
-    return (x <= x2 && y <= y2 && y >= y1 && x >= x1);
+    return (x <= x2 && y <= y2 && y >= y1 && x >= x1);*/
 }
 
 /**
@@ -118,10 +119,6 @@ std::vector<float> SquareRigid::getPosition()
     std::vector<float> vec;
     vec.push_back(o_x);
     vec.push_back(o_y);
-    /*vec.push_back(x1);
-    vec.push_back(x2);
-    vec.push_back(y1);
-    vec.push_back(y2);*/
     return vec;
 }
 
