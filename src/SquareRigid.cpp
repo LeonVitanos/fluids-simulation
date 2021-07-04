@@ -144,6 +144,18 @@ void SquareRigid::update(BoundaryCell *boundaries, float dt)
 
 void SquareRigid::setPosition(float x, float y)
 {
+    float diffX = (o_x - x) / grid_size;
+    float diffY = (o_y - y) / grid_size;
+
+    coordinates[0][0] -= diffX;
+    coordinates[0][1] -= diffY;
+    coordinates[1][0] -= diffX;
+    coordinates[1][1] -= diffY;
+    coordinates[2][0] -= diffX;
+    coordinates[2][1] -= diffY;
+    coordinates[3][0] -= diffX;
+    coordinates[3][1] -= diffY;
+
     o_x = x;
     o_y = y;
 }
