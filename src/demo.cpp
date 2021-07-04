@@ -455,7 +455,7 @@ int main(int argc, char **argv)
 	clear_data();
 
 //	objects.push_back((BaseObject *)new Square(20, 20, 20, 16, N));
-	objects.push_back((BaseObject *)new SquareRigid(1, 1, 2, 2, N));
+	objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
 
 	/*
 	for (int j = 20; j < 40; j++)

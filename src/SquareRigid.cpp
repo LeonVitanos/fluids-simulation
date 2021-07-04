@@ -12,14 +12,16 @@
 
 SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N)
 {
+    /*rotation.push_back(0);
     rotation.push_back(0);
     rotation.push_back(0);
-    rotation.push_back(0);
-    rotation.push_back(0);
-    x1 = o_x - o_w / 2;
-    x2 = o_x + o_w / 2;
-    y1 = o_y - o_h / 2;
-    y2 = o_y + o_h / 2;
+    rotation.push_back(0);*/
+    rotation = 0.0f;
+    float h = 1.0f / grid_size;
+    x1 = (-o_w / 2) * h;
+    x2 = (o_w / 2) * h;
+    y1 = (-o_h / 2) * h;
+    y2 = (o_h / 2) * h;
     coordinates.push_back(Vec2f(x1, y1));
     coordinates.push_back(Vec2f(x2, y1));
     coordinates.push_back(Vec2f(x1, y2));
@@ -29,8 +31,25 @@ SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x
 
 void SquareRigid::draw()
 {
+    glPushMatrix();
+    float h = 1.0f / grid_size;
+    glTranslatef(o_x * h, o_y * h, 0.0);
+    glRotatef(rotation, 0.0, 0.0, 1.0);
+
     glLineWidth(1.0f);
     glBegin(GL_LINES);
+    glColor3f(0.6, 0.2, 0.4);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y1);
+    glVertex2f(x1, y1);
+    glVertex2f(x1, y2);
+    glVertex2f(x2, y2);
+    glVertex2f(x1, y2);
+    glVertex2f(x2, y1);
+    glVertex2f(x2, y2);
+    glEnd();
+    glPopMatrix();
+    /*glBegin(GL_LINES);
 
     float h = 1.0f / grid_size;
 
@@ -43,20 +62,22 @@ void SquareRigid::draw()
     glVertex2f(coordinates[3][0] * h, coordinates[3][1] * h);
     glVertex2f(coordinates[2][0] * h, coordinates[2][1] * h);
     glVertex2f(coordinates[3][0] * h, coordinates[3][1] * h);
-    glEnd();
+    glEnd();*/
 }
 
 void SquareRigid::update(BoundaryCell *boundaries, float dt)
 {
     float h = 1.0f / grid_size;
 
-    rotation = getRotationMatrix(100);
+    /*rotation = getRotationMatrix(100);
     for (int i = 0; i < coordinates.size(); i++) {
         coordinates[i][0] = (coordinates[i][0] - 1) * rotation[0] + (coordinates[i][1] - 1) * rotation[1];
         coordinates[i][1] = (coordinates[i][0] - 1) * rotation[2] + (coordinates[i][1] - 1) * rotation[3];
         fprintf(stderr, "Coordinates: X=%g Y=%g rotation=%g\n",
                 coordinates[i][0], coordinates[i][1], rotation[0]);
-    }
+    }*/
+
+    rotation += 0.5f;
 //
 //    float h = 1.0f / grid_size;
 //    float x1 = (o_x - o_w / 2 + rotation[0]) * h;
@@ -95,10 +116,12 @@ bool SquareRigid::isOnCell(float x, float y)
 std::vector<float> SquareRigid::getPosition()
 {
     std::vector<float> vec;
-    vec.push_back(x1);
+    vec.push_back(o_x);
+    vec.push_back(o_y);
+    /*vec.push_back(x1);
     vec.push_back(x2);
     vec.push_back(y1);
-    vec.push_back(y2);
+    vec.push_back(y2);*/
     return vec;
 }
 

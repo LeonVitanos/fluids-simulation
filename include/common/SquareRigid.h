@@ -21,7 +21,7 @@ public:
     std::vector<float> getVelocity();
     std::vector<float> getRotationMatrix(float angle);
 
-    std::vector<float> rotation;
+    float rotation;
     std::vector<Vec2f> coordinates;
     float x1, x2, y1, y2;
 
