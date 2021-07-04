@@ -25,7 +25,15 @@
 #include <GL/glut.h>
 #endif
 
+#include <vector>
+#include "Particle.h"
+#include "Force.h"
+#include "SpringForce.h"
+#include "Wall.h"
+
 /* macros */
+
+extern void simulation_step(int N, float *u, float *v, float *dens, std::vector<Particle *> pVector, std::vector<Force *> forces, std::vector<Force *> constraints, std::vector<Wall *> walls, float dt, int solver);
 
 #define IX(i, j) ((i) + (N + 2) * (j))
 
@@ -64,6 +72,11 @@ static int mouse_down[3];
 static int omx, omy, mx, my;
 
 BaseObject *selectedObject;
+std::vector<Particle *> pVector;
+std::vector<Force *> forces;
+std::vector<Force *> constraints;
+std::vector<Wall *> walls;
+bool drawForces[7] = {false, false, false, false, false, false, false};
 
 /*
   ----------------------------------------------------------------------
@@ -98,20 +111,15 @@ static void clear_data(void)
 	for (i = 0; i < size; i++)
 	{
 		u[i] = v[i] = u_prev[i] = v_prev[i] = dens[i] = dens_prev[i] = curl[i] /*= boundaries[i]*/ = 0.0f;
-		/*boundaries[i].b_bottom = false;
-		boundaries[i].b_left = false;
-		boundaries[i].b_right = false;
-		boundaries[i].b_top = false;*/
 	}
-	/*int j;
-	FOR_EACH_CELL
-		boundaries[i].b_bottom = false;
-		boundaries[i].b_left = false;
-		boundaries[i].b_right = false;
-		boundaries[i].b_top = false;
-	END_FOR*/
 
-	// objects.clear();
+	int ii;
+	size = pVector.size();
+
+	for (ii = 0; ii < size; ii++)
+	{
+		pVector[ii]->reset();
+	}
 }
 
 static int allocate_data(void)
@@ -217,6 +225,26 @@ static void draw_density(void)
 	}
 
 	glEnd();
+}
+
+static void draw_particles(void)
+{
+	int size = pVector.size();
+
+	for (int ii = 0; ii < size; ii++)
+	{
+		pVector[ii]->draw(false, false);
+	}
+}
+
+static void draw_forces(void)
+{
+	int size = forces.size();
+
+	for (int ii = 0; ii < size; ii++)
+	{
+		forces[ii]->draw(drawForces);
+	}
 }
 
 /*
@@ -349,6 +377,7 @@ static void idle_func(void)
 	update_velocities(objects, u_prev, v_prev, dens, N);
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries, objects);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries, objects);
+	simulation_step(N, u, v, dens, pVector, forces, constraints, walls, dt, 2);
 
 	glutSetWindow(win_id);
 	glutPostRedisplay();
@@ -370,11 +399,14 @@ static void display_func(void)
 		END_FOR*/
 		for (int k = 0; k < objects.size(); k++)
 		{
-						FOR_EACH_CELL
-							objects[k]->isOnCell(i, j);
-						END_FOR
+			FOR_EACH_CELL
+			objects[k]->isOnCell(i, j);
+			END_FOR
 			objects[k]->draw();
 		}
+		draw_boundaries();
+		draw_particles();
+		draw_forces();
 	}
 
 	post_display();
@@ -489,6 +521,50 @@ int main(int argc, char **argv)
         boundaries[IX(i, 40)].b_y = 40;
 	}*/
 	// Ideally we set up scenes here again
+
+	const double dist = 0.05;
+	Vec2f center(0.0, 0.0);
+	const Vec2f offset(dist, 0.0);
+
+	for (int i = 0; i < 6; i++)
+	{
+		center = Vec2f(0.5, 0.5 + 5 * dist - dist * i);
+		for (int j = -2; j <= 2; j++)
+		{
+			pVector.push_back(new Particle(center + j * offset));
+			//forces.push_back((Force *)new Gravity(particles.back()));
+			if (i == 0)
+			{
+				//Apply fixed constraint on the first row particles
+				//constraints.push_back((Force *)new SlidingConstraint(particles.back(), 0.25));
+				if (j != -2)
+				{
+				}
+				// Rod constraints here
+			}
+			if (j != -2)
+				//spring connecting horizontally
+				forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 1], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
+			if (i != 0)
+			{
+				//spring connecting vertically
+				forces.push_back((Force *)new SpringForce(pVector[i * 5 - 5 + j + 2], pVector[i * 5 + j + 2], dist, 0.7, 0.8));
+				if (j != 2)
+					//spring connecting diagonally to the right
+					forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 4], dist, 0.05, 0.8));
+				if (j != -2)
+					//spring connecting diagonally to the left
+					forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 2], pVector[i * 5 + j + 2 - 6], dist, 0.05, 0.8));
+			}
+		}
+	}
+
+	int size = pVector.size();
+
+	for (int ii = 0; ii < size; ii++)
+	{
+		pVector[ii]->reset();
+	}
 
 	win_x = 512;
 	win_y = 512;
