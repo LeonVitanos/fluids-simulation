@@ -47,23 +47,27 @@ void update_velocities(std::vector<BaseObject *> objects, float *u, float *v, fl
 
 			// Actually you wanna look at the boundaries of the object
 			// and compute the forces on that (to allow for 2-way coupling)
-			if (i == pos[0])
-			{
-				// Put u and v on correct location (of the boundary of object)
-				u[IX(i - 1, j)] += vel[0];
-			}
-			if (i == pos[2])
-			{
-				u[IX(i + 1, j)] += vel[0];
-			}
-			if (j == pos[1])
-			{
-				v[IX(i, j + 1)] += vel[1];
-			}
-			if (j == pos[3])
-			{
-				v[IX(i, j - 1)] += vel[1];
-			}
+
+
+			// A |B C
+			// D |E F
+			//   -----
+			// G H I
+			// ! left && is on cell: so the boundary should be on the left
+			// so we exert forces towards the left
+			//
+            if (!objects[o]->isOnCell(i - 1, j)) {
+                u[IX(i - 1, j)] += vel[0];
+            }
+            if (!objects[o]->isOnCell(i +1, j)) {
+                u[IX(i + 1, j)] += vel[0];
+            }
+            if (!objects[o]->isOnCell(i, j + 1)) {
+                v[IX(i, j + 1)] += vel[1];
+            }
+            if (!objects[o]->isOnCell(i, j - 1)) {
+                v[IX(i, j - 1)] += vel[1];
+            }
 		}
 		END_FOR
 	}
