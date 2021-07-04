@@ -348,6 +348,7 @@ static void idle_func(void)
 static void display_func(void)
 {
 	int i, j;
+	float h = 1.0f / N;
 	pre_display();
 
 	if (dvel)
@@ -355,12 +356,15 @@ static void display_func(void)
 	else
 	{
 		draw_density();
-		FOR_EACH_CELL
+		/*FOR_EACH_CELL
 		boundaries[IX(i, j)].draw();
-		END_FOR
-		for (int i = 0; i < objects.size(); i++)
+		END_FOR*/
+		for (int k = 0; k < objects.size(); k++)
 		{
-			objects[i]->draw();
+			FOR_EACH_CELL
+				objects[k]->isOnCell(i, j);
+			END_FOR
+			objects[k]->draw();
 		}
 	}
 

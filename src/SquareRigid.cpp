@@ -12,16 +12,18 @@
 
 SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N)
 {
+    //o_x = 0.0f;
+    //o_y = 0.0f;
     rotation = 0.0f;
     float h = 1.0f / grid_size;
-    x1 = (-o_w / 2) * h;
-    x2 = (o_w / 2) * h;
-    y1 = (-o_h / 2) * h;
-    y2 = (o_h / 2) * h;
+    x1 = (o_x - o_w / 2) * h;
+    x2 = (o_x + o_w / 2) * h;
+    y1 = (o_y - o_h / 2) * h;
+    y2 = (o_y + o_h / 2) * h;
     coordinates.push_back(Vec2f(x1, y1));
     coordinates.push_back(Vec2f(x2, y1));
-    coordinates.push_back(Vec2f(x1, y2));
     coordinates.push_back(Vec2f(x2, y2));
+    coordinates.push_back(Vec2f(x1, y2));
 }
 
 void SquareRigid::draw()
@@ -49,28 +51,40 @@ void SquareRigid::draw()
 //    float h = 1.0f / grid_size;
 
     glColor3f(0.2, 0.6, 0.8);
-    glVertex2f(coordinates[0][0] * h, coordinates[0][1] * h);
-    glVertex2f(coordinates[1][0] * h, coordinates[1][1] * h);
-    glVertex2f(coordinates[0][0] * h, coordinates[0][1] * h);
-    glVertex2f(coordinates[2][0] * h, coordinates[2][1] * h);
-    glVertex2f(coordinates[1][0] * h, coordinates[1][1] * h);
-    glVertex2f(coordinates[3][0] * h, coordinates[3][1] * h);
-    glVertex2f(coordinates[2][0] * h, coordinates[2][1] * h);
-    glVertex2f(coordinates[3][0] * h, coordinates[3][1] * h);
+    // Bottom left to bottom right
+    glVertex2f(coordinates[0][0], coordinates[0][1]);
+    glVertex2f(coordinates[1][0], coordinates[1][1]);
+    // Bottom right to top right
+    glVertex2f(coordinates[1][0], coordinates[1][1]);
+    glVertex2f(coordinates[2][0], coordinates[2][1]);
+    // Top right to top left
+    glVertex2f(coordinates[2][0], coordinates[2][1]);
+    glVertex2f(coordinates[3][0], coordinates[3][1]);
+    // Top left to bottom left
+    glVertex2f(coordinates[3][0], coordinates[3][1]);
+    glVertex2f(coordinates[0][0], coordinates[0][1]);
     glEnd();
 }
 
 void SquareRigid::update(BoundaryCell *boundaries, float dt)
 {
     float h = 1.0f / grid_size;
+    float tempX;
+    float tempY;
 
-    rotation += 0.5f;
+    rotation = 0.05f;
+    /*if (rotation > 360.0f) {
+        rotation -= 360;
+    }*/
     for (int i = 0; i < coordinates.size(); i++)
     {
-        coordinates[i][0] = o_x + ( - o_w / 2) * (float)std::cos(rotation) + (o_h / 2) * std::sin(rotation);
-        coordinates[i][1] = o_y + (o_w / 2) * (float)std::sin(rotation) + (- o_h / 2) * std::cos(rotation);
-        fprintf(stderr, "Coordinates: X=%g Y=%g rotation=%g i=%d\n",
-                coordinates[i][0], coordinates[i][1], rotation, i);
+        tempX = coordinates[i][0] - (o_x * h);
+        tempY = coordinates[i][1] - (o_y * h);
+
+        coordinates[i][0] = (tempX * std::cos(rotation) - tempY * std::sin(rotation)) + (o_x * h);
+        coordinates[i][1] = (tempX * std::sin(rotation) + tempY * std::cos(rotation)) + (o_y * h);
+        //fprintf(stderr, "Coordinates: X=%g Y=%g rotation=%g i=%d\n",
+        //        coordinates[i][0], coordinates[i][1], rotation, i);
     }
     //
     //    float h = 1.0f / grid_size;
@@ -99,7 +113,32 @@ bool SquareRigid::isOnCell(float x, float y)
     float c_x = (x + o_w / 2) * h;
     float c_y = (y + o_h / 2) * h;
 
-    return false;
+    float sign;
+
+    for (int i = 0; i < coordinates.size(); i++)
+    {
+        sign = ((c_x - coordinates[i][0]) * (coordinates[(i+1)%4][1] - coordinates[i][1])) - ((c_y - coordinates[i][1]) * (coordinates[(i+1)%4][0] - coordinates[i][0]));
+
+        if (sign > 0) return false;
+    }
+
+    glBegin(GL_QUADS);
+    glColor3f(0.1, 0.3, 0.4);
+    // Bottom left to bottom right
+    glVertex2f(x * h, y * h);
+    glVertex2f((x + 1) * h, y * h);
+    // Bottom right to top right
+    glVertex2f((x + 1) * h, y * h);
+    glVertex2f((x + 1) * h, (y + 1) * h);
+    // Top right to top left
+    glVertex2f((x + 1) * h, (y + 1) * h);
+    glVertex2f(x * h, (y + 1) * h);
+    // Top left to bottom left
+    glVertex2f(x * h, (y + 1) * h);
+    glVertex2f(x * h, y * h);
+    glEnd();
+
+    return true;
     /*float x1 = (o_x - o_w / 2);
     float x2 = (o_x + o_w / 2);
     float y1 = (o_y - o_h / 2);
