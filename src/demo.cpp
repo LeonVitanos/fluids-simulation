@@ -268,9 +268,6 @@ static void get_from_UI(float *d, float *u, float *v)
 			v[IX(i, j)] = force * (omy - my);
 		}
 	}
-
-	//
-
 	if (mouse_down[2])
 	{
 		d[IX(i, j)] = source;
@@ -373,9 +370,9 @@ static void display_func(void)
 		END_FOR*/
 		for (int k = 0; k < objects.size(); k++)
 		{
-			//			FOR_EACH_CELL
-			//				objects[k]->isOnCell(i, j);
-			//			END_FOR
+						FOR_EACH_CELL
+							objects[k]->isOnCell(i, j);
+						END_FOR
 			objects[k]->draw();
 		}
 	}
@@ -470,7 +467,7 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-	objects.push_back((BaseObject *)new Square(20, 20, 20, 20, N));
+	objects.push_back((BaseObject *)new Square(20, 20, 10, 10, N));
 	//objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
 
 	/*
