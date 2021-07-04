@@ -10,58 +10,59 @@
 #include <GL/glut.h>
 #endif
 
-SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N) {
-    M=4;
-    torque=0;
-    R=Mat2(1.0, 0.0, 0.0, 1.0);
+SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N)
+{
+    rotation.push_back(0);
+    rotation.push_back(0);
+    rotation.push_back(0);
+    rotation.push_back(0);
+    x1 = o_x - o_w / 2;
+    x2 = o_x + o_w / 2;
+    y1 = o_y - o_h / 2;
+    y2 = o_y + o_h / 2;
+    coordinates.push_back(Vec2f(x1, y1));
+    coordinates.push_back(Vec2f(x2, y1));
+    coordinates.push_back(Vec2f(x1, y2));
+    coordinates.push_back(Vec2f(x2, y2));
 
-
-    // Calculate Ibody and Ibodyinv before simulation starts
-    Ibody = M/12 * pow(o_w, 2) + pow(o_h, 2);
-	//Ibodyinv = Ibody.inverse();
 }
 
 void SquareRigid::draw()
 {
     glLineWidth(1.0f);
-    glBegin(GL_QUADS);
+    glBegin(GL_LINES);
 
     float h = 1.0f / grid_size;
-    float x1 = (o_x - o_w / 2 - 0.5f) * h;
-    float x2 = (o_x + o_w / 2 + 0.5f) * h;
-    float y1 = (o_y - o_h / 2 - 0.5f) * h;
-    float y2 = (o_y + o_h / 2 + 0.5f) * h;
 
-    //x1=0.9*x1 + o_x;
-    //x2=0.9*x2 + o_x;
-    //y1=0.9*y1 + o_y;
-    //y2=0.9*y2 + o_y;
-
-    glColor3f(0.6, 0.2, 0.4);    
-    glVertex2f(x1, y1);
-    glVertex2f(x1, y2);
-    glVertex2f(x2, y2);
-    glVertex2f(x2, y1);
+    glColor3f(0.2, 0.6, 0.8);
+    glVertex2f(coordinates[0][0] * h, coordinates[0][1] * h);
+    glVertex2f(coordinates[1][0] * h, coordinates[1][1] * h);
+    glVertex2f(coordinates[0][0] * h, coordinates[0][1] * h);
+    glVertex2f(coordinates[2][0] * h, coordinates[2][1] * h);
+    glVertex2f(coordinates[1][0] * h, coordinates[1][1] * h);
+    glVertex2f(coordinates[3][0] * h, coordinates[3][1] * h);
+    glVertex2f(coordinates[2][0] * h, coordinates[2][1] * h);
+    glVertex2f(coordinates[3][0] * h, coordinates[3][1] * h);
     glEnd();
 }
 
-void SquareRigid::update()
+void SquareRigid::update(BoundaryCell *boundaries, float dt)
 {
     float h = 1.0f / grid_size;
-    float x1 = (o_x - o_w / 2 - 0.5f) * h;
-    float x2 = (o_x + o_w / 2 + 0.5f) * h;
-    float y1 = (o_y - o_h / 2 - 0.5f) * h;
-    float y2 = (o_y + o_h / 2 + 0.5f) * h;
 
-    // Put square back in boundaries as its not allowed to leave
-    if (x2 >= 1)
-        o_x = grid_size - o_w / 2 - 0.5f;
-    if (x1 <= 0)
-        o_x = o_w / 2 + 0.5f;
-    if (y2 >= 1)
-        o_y = grid_size - o_h / 2 - 0.5f;
-    if (y1 <= 0)
-        o_y = o_h / 2 + 0.5f;
+    rotation = getRotationMatrix(100);
+    for (int i = 0; i < coordinates.size(); i++) {
+        coordinates[i][0] = (coordinates[i][0] - 1) * rotation[0] + (coordinates[i][1] - 1) * rotation[1];
+        coordinates[i][1] = (coordinates[i][0] - 1) * rotation[2] + (coordinates[i][1] - 1) * rotation[3];
+        fprintf(stderr, "Coordinates: X=%g Y=%g rotation=%g\n",
+                coordinates[i][0], coordinates[i][1], rotation[0]);
+    }
+//
+//    float h = 1.0f / grid_size;
+//    float x1 = (o_x - o_w / 2 + rotation[0]) * h;
+//    float x2 = (o_x + o_w / 2 + rotation[1]) * h;
+//    float y1 = (o_y - o_h / 2 + rotation[2]) * h;
+//    float y2 = (o_y + o_h / 2 + rotation[3]) * h;
 }
 
 void SquareRigid::setPosition(float x, float y)
@@ -94,10 +95,10 @@ bool SquareRigid::isOnCell(float x, float y)
 std::vector<float> SquareRigid::getPosition()
 {
     std::vector<float> vec;
-    vec.push_back(o_x - o_w / 2);
-    vec.push_back(o_y + o_h / 2);
-    vec.push_back(o_x + o_w / 2);
-    vec.push_back(o_y - o_h / 2);
+    vec.push_back(x1);
+    vec.push_back(x2);
+    vec.push_back(y1);
+    vec.push_back(y2);
     return vec;
 }
 
@@ -106,5 +107,16 @@ std::vector<float> SquareRigid::getVelocity()
     std::vector<float> vec;
     vec.push_back(o_u);
     vec.push_back(o_v);
+    return vec;
+}
+
+std::vector<float> SquareRigid::getRotationMatrix(float angle)
+{
+    std::vector<float> vec;
+    vec.push_back((float) std::cos(angle));
+    vec.push_back((float) -std::sin(angle));
+    vec.push_back((float) std::sin(angle));
+    vec.push_back((float) std::cos(angle));
+
     return vec;
 }

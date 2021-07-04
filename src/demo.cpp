@@ -42,7 +42,7 @@
 
 extern void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float dt, BoundaryCell *boundaries, std::vector<BaseObject *> objects);
 extern void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt, float *d0, BoundaryCell *boundaries, std::vector<BaseObject *> objects);
-extern void update_velocities(std::vector<BaseObject*> objects, float* u, float* v, float* d, int N);
+extern void update_velocities(std::vector<BaseObject *> objects, float *u, float *v, float *d, int N);
 
 /* global variables */
 
@@ -234,30 +234,30 @@ static void get_from_UI(float *d, float *u, float *v)
 	if (i < 1 || i > N || j < 1 || j > N)
 		return;
 
-
-
 	if (mouse_down[0])
 	{
-        for (int k = 0; k < objects.size(); k++)
-        {
-            if (objects[k]->isOnCell(i, j))
-            {
-                objects[k]->setPosition(i, j);
-                objects[k]->setVelocity(0, 0);
-                selectedObject = objects[k];
-            }
-        }
+		for (int k = 0; k < objects.size(); k++)
+		{
+			if (objects[k]->isOnCell(i, j))
+			{
+				objects[k]->setPosition(i, j);
+				objects[k]->setVelocity(0, 0);
+				selectedObject = objects[k];
+			}
+		}
 		if (selectedObject != NULL)
 		{
 			selectedObject->setPosition(i, j);
 			selectedObject->setVelocity((mx - omx), (omy - my));
-		} else {
-            u[IX(i, j)] = force * (mx - omx);
-            v[IX(i, j)] = force * (omy - my);
+		}
+		else
+		{
+			u[IX(i, j)] = force * (mx - omx);
+			v[IX(i, j)] = force * (omy - my);
 		}
 	}
 
-//
+	//
 
 	if (mouse_down[2])
 	{
@@ -322,53 +322,22 @@ static void reshape_func(int width, int height)
 }
 
 static void idle_func(void)
-{	
+{
 	get_from_UI(dens_prev, u_prev, v_prev);
+    int i,j;
 
 	//Clear boundaries
-	//boundaries = NULL;
-	//boundaries = (BoundaryCell *)malloc((N + 2) * (N + 2) * sizeof(BoundaryCell));
-	for (int i=0; i<=N+1; i++){
-		for (int j=0; j<=N+1; j++){
-			boundaries[IX(i, j)].b_left = false;
-			boundaries[IX(i, j)].b_right = false;
-			boundaries[IX(i, j)].b_bottom = false;
-			boundaries[IX(i, j)].b_top = false;
-			boundaries[IX(i, j)].b_x = 0;
-			boundaries[IX(i, j)].b_y = 0;
-		}
-	}
+	FOR_EACH_CELL
+	    boundaries[IX(i,j)].clear();
+	END_FOR
 
+    // Update object position and its boundaries
 	for (int i = 0; i < objects.size(); i++)
 	{
-		// Update boundaries
-		std::vector<float> pos = objects[i]->getPosition();
-		//std::cout << pos[0] << " " << pos[1] << " " << pos[2] << " " << pos[3] << std::endl;;
-
-		for (int j = pos[3]+1; j < pos[1]+2; j++)
-		{
-			boundaries[IX((int)pos[0], j)].b_left = true;
-			boundaries[IX((int)pos[0],j)].b_x = pos[0]+1;
-			boundaries[IX((int)pos[0],j)].b_y = j;
-			boundaries[IX((int)pos[2]+1, j)].b_right = true;
-			boundaries[IX((int)pos[2]+1,j)].b_x = pos[2]+2;
-			boundaries[IX((int)pos[2]+1,j)].b_y = j;
-		}
-
-		for (int i = pos[0]+1; i < pos[2]+2; i++) {
-			boundaries[IX(i, (int)pos[1]+1)].b_bottom = true;
-			boundaries[IX(i, (int)pos[1])+1].b_x = i;
-			boundaries[IX(i, (int)pos[1])+1].b_y = pos[1]+2;
-			boundaries[IX(i, (int)pos[3])].b_top = true;
-			boundaries[IX(i, (int)pos[3])].b_x = i;
-			boundaries[IX(i, (int)pos[3])].b_y = pos[3]+1;
-		}
-
-		// Update object position
-		objects[i]->update();
+		objects[i]->update(boundaries, dt);
 	}
 
-    update_velocities(objects, u_prev, v_prev, dens, N);
+	update_velocities(objects, u_prev, v_prev, dens, N);
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, curl, boundaries, objects);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, boundaries, objects);
 
@@ -378,7 +347,7 @@ static void idle_func(void)
 
 static void display_func(void)
 {
-    int i, j;
+	int i, j;
 	pre_display();
 
 	if (dvel)
@@ -387,7 +356,7 @@ static void display_func(void)
 	{
 		draw_density();
 		FOR_EACH_CELL
-            boundaries[IX(i,j)].draw();
+		boundaries[IX(i, j)].draw();
 		END_FOR
 		for (int i = 0; i < objects.size(); i++)
 		{
@@ -485,10 +454,10 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-	objects.push_back((BaseObject *)new Square(20, 20, 20, 16, N));
-	objects.push_back((BaseObject *)new SquareRigid(7, 7, 10, 15, N));
+//	objects.push_back((BaseObject *)new Square(20, 20, 20, 16, N));
+	objects.push_back((BaseObject *)new SquareRigid(1, 1, 2, 2, N));
 
-/*
+	/*
 	for (int j = 20; j < 40; j++)
 	{
 		boundaries[IX(20, j)].b_left = true;

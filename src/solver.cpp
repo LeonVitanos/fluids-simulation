@@ -17,7 +17,6 @@
 #include <math.h>
 #include <vector>
 #include "BaseObject.h"
-#include "Boundary.h"
 
 void add_source(int N, float *x, float *s, float dt)
 {
@@ -26,49 +25,48 @@ void add_source(int N, float *x, float *s, float dt)
 		x[i] += dt * s[i];
 }
 
-void update_velocities(std::vector<BaseObject*> objects, float* u, float* v, float* d, int N)
+void update_velocities(std::vector<BaseObject *> objects, float *u, float *v, float *d, int N)
 {
-    int i,j;
-    for (int o = 0; o < objects.size(); o++)
-    {
-        FOR_EACH_CELL
-                if (objects[o]->isOnCell(i, j))
-                {
-                    // Two way coupling start..
-                    // objects[o]->setVelocity(x[IX(i - 1, j)], -x[IX(i + 1, j)]);
+	int i, j;
+	for (int o = 0; o < objects.size(); o++)
+	{
+		FOR_EACH_CELL
+		if (objects[o]->isOnCell(i, j))
+		{
+			// Two way coupling start..
+			// objects[o]->setVelocity(x[IX(i - 1, j)], -x[IX(i + 1, j)]);
 
-                    // Exert forces on the fluids
+			// Exert forces on the fluids
 
-                    // Get position and velocity of each object
-                    std::vector<float> pos = objects[o]->getPosition();
-                    std::vector<float> vel = objects[o]->getVelocity();
+			// Get position and velocity of each object
+			std::vector<float> pos = objects[o]->getPosition();
+			std::vector<float> vel = objects[o]->getVelocity();
 
-                    // Here basically check where the force should come from
-                    // so look at velocity of object and add it
+			// Here basically check where the force should come from
+			// so look at velocity of object and add it
 
-
-                    // Actually you wanna look at the boundaries of the object
-                    // and compute the forces on that (to allow for 2-way coupling)
-                    if (i == pos[0] )
-                    {
-                        // Put u and v on correct location (of the boundary of object)
-                        u[IX(i -1 , j)] += vel[0];
-//                        v[IX(i - 1,j)] += vel[1];
-                    }
-                    if (i == pos[2])
-                    {
-                        u[IX(i+1,j)] += vel[0];
-                    }
-                    if (j == pos[1]) {
-                        v[IX(i,j+1)] += vel[1];
-                    }
-                    if (j == pos[3]) {
-                        v[IX(i,j-1)] += vel[1];
-                    }
-
-                }
-        END_FOR
-    }
+			// Actually you wanna look at the boundaries of the object
+			// and compute the forces on that (to allow for 2-way coupling)
+			if (i == pos[0])
+			{
+				// Put u and v on correct location (of the boundary of object)
+				u[IX(i - 1, j)] += vel[0];
+			}
+			if (i == pos[2])
+			{
+				u[IX(i + 1, j)] += vel[0];
+			}
+			if (j == pos[1])
+			{
+				v[IX(i, j + 1)] += vel[1];
+			}
+			if (j == pos[3])
+			{
+				v[IX(i, j - 1)] += vel[1];
+			}
+		}
+		END_FOR
+	}
 }
 
 /**
@@ -94,16 +92,19 @@ void set_bnd(int N, int b, float *x, float *u, float *v, BoundaryCell *boundarie
 	if (boundaries[IX(i, j)].b_left)
 	{
 		x[IX(i, j)] = b == 1 ? -x[IX(i, j)] : 0;
-	} if (boundaries[IX(i, j)].b_right)
-    {
-        x[IX(i, j)] = b == 1 ? -x[IX(i, j)] : 0;
-    } if (boundaries[IX(i,j)].b_top)
-    {
-         x[IX(i, j)] = b == 2 ? -x[IX(i, j)] : 0;
-    } if (boundaries[IX(i,j)].b_bottom)
-    {
-        x[IX(i, j)] = b == 2 ? -x[IX(i, j)] : 0;
-    }
+	}
+	if (boundaries[IX(i, j)].b_right)
+	{
+		x[IX(i, j)] = b == 1 ? -x[IX(i, j)] : 0;
+	}
+	if (boundaries[IX(i, j)].b_top)
+	{
+		x[IX(i, j)] = b == 2 ? -x[IX(i, j)] : 0;
+	}
+	if (boundaries[IX(i, j)].b_bottom)
+	{
+		x[IX(i, j)] = b == 2 ? -x[IX(i, j)] : 0;
+	}
 	END_FOR
 
 	x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);
@@ -115,12 +116,12 @@ void set_bnd(int N, int b, float *x, float *u, float *v, BoundaryCell *boundarie
 void lin_solve(int N, int b, float *x, float *x0, float a, float c, float *u, float *v, BoundaryCell *boundaries, std::vector<BaseObject *> objects)
 {
 	int i, j, k;
-    float left ;
+	float left;
 
 	for (k = 0; k < 20; k++)
 	{
 		FOR_EACH_CELL
-		x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i-1,j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
+		x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
 		END_FOR
 		set_bnd(N, b, x, u, v, boundaries, objects);
 	}

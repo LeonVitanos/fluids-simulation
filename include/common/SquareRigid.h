@@ -13,19 +13,18 @@ public:
          */
     SquareRigid(float x, float y, int height, int width, int N);
     void draw() override;
-    void update() override;
+    void update(BoundaryCell *boundaries, float dt) override;
     void setPosition(float x, float y) override;
     void setVelocity(float u, float v) override;
     bool isOnCell(float x, float y) override;
     std::vector<float> getPosition();
     std::vector<float> getVelocity();
-    std::vector<float> getBoundaries();
-    
-    Mat2 R;
-    float omega;
-    float torque;
-    float M;
-    std::vector<Vec2f> F;
+    std::vector<float> getRotationMatrix(float angle);
+
+    std::vector<float> rotation;
+    std::vector<Vec2f> coordinates;
+    float x1, x2, y1, y2;
+
     Mat2 Ibody, Ibodyinv;
 
 private:

@@ -10,35 +10,66 @@
 #include <GL/glut.h>
 #endif
 
-Square::Square(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N) {
+#define IX(i, j) ((i) + (grid_size + 2) * (j))
 
+Square::Square(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N)
+{
 }
 
 void Square::draw()
 {
     glLineWidth(1.0f);
-    glBegin(GL_QUADS);
+    glBegin(GL_LINES);
 
     float h = 1.0f / grid_size;
-    float x1 = (o_x - o_w / 2 - 0.5f) * h;
-    float x2 = (o_x + o_w / 2 + 0.5f) * h;
-    float y1 = (o_y - o_h / 2 - 0.5f) * h;
-    float y2 = (o_y + o_h / 2 + 0.5f) * h;
+    float x1 = (o_x - o_w / 2) * h;
+    float x2 = (o_x + o_w / 2 ) * h;
+    float y1 = (o_y - o_h / 2 ) * h;
+    float y2 = (o_y + o_h / 2) * h;
     glColor3f(0.6, 0.2, 0.4);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y1);
     glVertex2f(x1, y1);
     glVertex2f(x1, y2);
     glVertex2f(x2, y2);
+    glVertex2f(x1, y2);
     glVertex2f(x2, y1);
+    glVertex2f(x2, y2);
     glEnd();
 }
 
-void Square::update()
+void Square::update(BoundaryCell *boundaries, float dt)
 {
     float h = 1.0f / grid_size;
-    float x1 = (o_x - o_w / 2 - 0.5f) * h;
-    float x2 = (o_x + o_w / 2 + 0.5f) * h;
-    float y1 = (o_y - o_h / 2 - 0.5f) * h;
-    float y2 = (o_y + o_h / 2 + 0.5f) * h;
+    float x1 = (o_x - o_w / 2) * h;
+    float x2 = (o_x + o_w / 2) * h;
+    float y1 = (o_y - o_h / 2) * h;
+    float y2 = (o_y + o_h / 2) * h;
+
+    std::vector<float> pos;
+    pos.push_back(o_x - o_w / 2);
+    pos.push_back(o_y + o_h / 2);
+    pos.push_back(o_x + o_w / 2);
+    pos.push_back(o_y - o_h / 2);
+
+    for (int j = pos[3]; j < pos[1]; j++)
+    {
+        boundaries[IX((int)pos[0], j)].b_left = true;
+        boundaries[IX((int)pos[0],j)].b_x = pos[0];
+        boundaries[IX((int)pos[0],j)].b_y = j;
+        boundaries[IX((int)pos[2]-1, j)].b_right = true;
+        boundaries[IX((int)pos[2],j)].b_x = pos[2];
+        boundaries[IX((int)pos[2],j)].b_y = j;
+    }
+
+    for (int i = pos[0]; i < pos[2]; i++) {
+        boundaries[IX(i, (int)pos[1])].b_bottom = true;
+        boundaries[IX(i, (int)pos[1])].b_x = i;
+        boundaries[IX(i, (int)pos[1])].b_y = pos[1];
+        boundaries[IX(i, (int)pos[3] - 1)].b_top = true;
+        boundaries[IX(i, (int)pos[3])].b_x = i;
+        boundaries[IX(i, (int)pos[3])].b_y = pos[3];
+    }
 
     // Put square back in boundaries as its not allowed to leave
     if (x2 >= 1)
@@ -65,7 +96,6 @@ void Square::setVelocity(float u, float v)
 
 bool Square::isOnCell(float x, float y)
 {
-    float h = 1.0f / grid_size;
     float x1 = (o_x - o_w / 2);
     float x2 = (o_x + o_w / 2);
     float y1 = (o_y - o_h / 2);
