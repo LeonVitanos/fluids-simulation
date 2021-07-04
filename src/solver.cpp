@@ -48,7 +48,6 @@ void update_velocities(std::vector<BaseObject *> objects, float *u, float *v, fl
 			// Actually you wanna look at the boundaries of the object
 			// and compute the forces on that (to allow for 2-way coupling)
 
-
 			// A |B C
 			// D |E F
 			//   -----
@@ -56,18 +55,22 @@ void update_velocities(std::vector<BaseObject *> objects, float *u, float *v, fl
 			// ! left && is on cell: so the boundary should be on the left
 			// so we exert forces towards the left
 			//
-            if (!objects[o]->isOnCell(i - 1, j)) {
-                u[IX(i - 1, j)] += vel[0];
-            }
-            if (!objects[o]->isOnCell(i +1, j)) {
-                u[IX(i + 1, j)] += vel[0];
-            }
-            if (!objects[o]->isOnCell(i, j + 1)) {
-                v[IX(i, j + 1)] += vel[1];
-            }
-            if (!objects[o]->isOnCell(i, j - 1)) {
-                v[IX(i, j - 1)] += vel[1];
-            }
+			if (!objects[o]->isOnCell(i - 1, j))
+			{
+				u[IX(i - 1, j)] += vel[0];
+			}
+			if (!objects[o]->isOnCell(i + 1, j))
+			{
+				u[IX(i + 1, j)] += vel[0];
+			}
+			if (!objects[o]->isOnCell(i, j + 1))
+			{
+				v[IX(i, j + 1)] += vel[1];
+			}
+			if (!objects[o]->isOnCell(i, j - 1))
+			{
+				v[IX(i, j - 1)] += vel[1];
+			}
 		}
 		END_FOR
 	}
@@ -95,25 +98,34 @@ void set_bnd(int N, int b, float *x, float *u, float *v, BoundaryCell *boundarie
 	bool change = false;
 	float vel = 0.0f;
 
+	if (boundaries[IX(i, j)].b_left || boundaries[IX(i, j)].b_right || boundaries[IX(i, j)].b_top || boundaries[IX(i, j)].b_bottom)
+	{
+
+		x[IX(i - 1, j)] = b == 1 ? -x[IX(i - 2, j)] : x[IX(i - 2, j)];
+
+		x[IX(i + 1, j)] = b == 1 ? -x[IX(i + 2, j)] : x[IX(i + 2, j)];
+
+		x[IX(i, j + 1)] = b == 2 ? -x[IX(i, j + 2)] : x[IX(i, j + 2)];
+
+		x[IX(i, j - 1)] = b == 2 ? -x[IX(i, j - 2)] : x[IX(i, j - 2)];
+		x[IX(i, j)] = 0;
+	}
+
 	if (boundaries[IX(i, j)].b_left)
 	{
-		vel -= b == 1 ? x[IX(i - 1, j)] : 0;
-		change = true;
+		x[IX(i, j)] = x[IX(i - 1, j)];
 	}
-	if (boundaries[IX(i, j)].b_right)
+	else if (boundaries[IX(i, j)].b_right)
 	{
-		vel -= b == 1 ? x[IX(i + 1, j)] : 0;
-		change = true;
+		x[IX(i, j)] = x[IX(i + 1, j)];
 	}
-	if (boundaries[IX(i, j)].b_top)
+	else if (boundaries[IX(i, j)].b_top)
 	{
-		vel -= b == 2 ? x[IX(i, j + 1)] : 0;
-		change = true;
+		x[IX(i, j)] = x[IX(i, j + 1)];
 	}
-	if (boundaries[IX(i, j)].b_bottom)
+	else if (boundaries[IX(i, j)].b_bottom)
 	{
-		vel -= b == 2 ? x[IX(i, j - 1)] : 0;
-		change = true;
+		x[IX(i, j)] = x[IX(i, j - 1)];
 	}
 
 	if (change) x[IX(i, j)] = vel;
