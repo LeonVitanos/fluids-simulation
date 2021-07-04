@@ -336,14 +336,14 @@ static void reshape_func(int width, int height)
 static void idle_func(void)
 {
 	get_from_UI(dens_prev, u_prev, v_prev);
-    int i,j;
+	int i, j;
 
 	//Clear boundaries
 	FOR_EACH_CELL
-	    boundaries[IX(i,j)].clear();
+	boundaries[IX(i, j)].clear();
 	END_FOR
 
-    // Update object position and its boundaries
+	// Update object position and its boundaries
 	for (int i = 0; i < objects.size(); i++)
 	{
 		objects[i]->update(boundaries, dt);
@@ -373,9 +373,9 @@ static void display_func(void)
 		END_FOR*/
 		for (int k = 0; k < objects.size(); k++)
 		{
-			FOR_EACH_CELL
-				objects[k]->isOnCell(i, j);
-			END_FOR
+			//			FOR_EACH_CELL
+			//				objects[k]->isOnCell(i, j);
+			//			END_FOR
 			objects[k]->draw();
 		}
 	}
@@ -470,7 +470,7 @@ int main(int argc, char **argv)
 		exit(1);
 	clear_data();
 
-//	objects.push_back((BaseObject *)new Square(20, 20, 20, 16, N));
+	//	objects.push_back((BaseObject *)new Square(20, 20, 20, 16, N));
 	objects.push_back((BaseObject *)new SquareRigid(20, 20, 20, 20, N));
 
 	/*

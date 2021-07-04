@@ -12,14 +12,14 @@
 
 #define IX(i, j) ((i) + (grid_size + 2) * (j))
 
-#define FOR_EACH_CELL            \
-	for (i = 1; i <= grid_size; i++)     \
-	{                            \
-		for (j = 1; j <= grid_size; j++) \
-		{
+#define FOR_EACH_CELL                    \
+    for (i = 1; i <= grid_size; i++)     \
+    {                                    \
+        for (j = 1; j <= grid_size; j++) \
+        {
 #define END_FOR \
-	}           \
-	}
+    }           \
+    }
 
 SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x), o_y(y), o_h(height), o_w(width), grid_size(N)
 {
@@ -35,32 +35,16 @@ SquareRigid::SquareRigid(float x, float y, int height, int width, int N) : o_x(x
     coordinates.push_back(Vec2f(x2, y1));
     coordinates.push_back(Vec2f(x2, y2));
     coordinates.push_back(Vec2f(x1, y2));
-    cells = (bool *)malloc((N+2) * (N+2) * sizeof(bool));
+    cells = (bool *)malloc((N + 2) * (N + 2) * sizeof(bool));
 }
 
 void SquareRigid::draw()
 {
-//    glPushMatrix();
+    //    glPushMatrix();
     float h = 1.0f / grid_size;
-//    glTranslatef(o_x * h, o_y * h, 0.0);
-//    glRotatef(rotation, 0.0, 0.0, 1.0);
-//
-//    glLineWidth(1.0f);
-//    glBegin(GL_LINES);
-//    glColor3f(0.6, 0.2, 0.4);
-//    glVertex2f(x1, y1);
-//    glVertex2f(x2, y1);
-//    glVertex2f(x1, y1);
-//    glVertex2f(x1, y2);
-//    glVertex2f(x2, y2);
-//    glVertex2f(x1, y2);
-//    glVertex2f(x2, y1);
-//    glVertex2f(x2, y2);
-//    glEnd();
-//    glPopMatrix();
     glBegin(GL_LINES);
 
-//    float h = 1.0f / grid_size;
+    //    float h = 1.0f / grid_size;
 
     glColor3f(0.2, 0.6, 0.8);
     // Bottom left to bottom right
@@ -111,28 +95,33 @@ void SquareRigid::update(BoundaryCell *boundaries, float dt)
     END_FOR*/
 
     FOR_EACH_CELL
-        if (isOnCell(i, j)) {
-            if (!isOnCell(i + 1, j)) {
-                boundaries[IX(i, j)].b_right = true;
-                boundaries[IX(i, j)].b_x = i;
-                boundaries[IX(i, j)].b_y = j;
-            }
-            if (!isOnCell(i - 1, j)) {
-                boundaries[IX(i, j)].b_left = true;
-                boundaries[IX(i, j)].b_x = i;
-                boundaries[IX(i, j)].b_y = j;
-            }
-            if (!isOnCell(i, j + 1)) {
-                boundaries[IX(i, j)].b_top = true;
-                boundaries[IX(i, j)].b_x = i;
-                boundaries[IX(i, j)].b_y = j;
-            }
-            if (!isOnCell(i, j - 1)) {
-                boundaries[IX(i, j)].b_bottom = true;
-                boundaries[IX(i, j)].b_x = i;
-                boundaries[IX(i, j)].b_y = j;
-            }
+    if (isOnCell(i, j))
+    {
+        if (!isOnCell(i + 1, j))
+        {
+            boundaries[IX(i, j)].b_right = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
         }
+        if (!isOnCell(i - 1, j))
+        {
+            boundaries[IX(i, j)].b_left = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
+        }
+        if (!isOnCell(i, j + 1))
+        {
+            boundaries[IX(i, j)].b_top = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
+        }
+        if (!isOnCell(i, j - 1))
+        {
+            boundaries[IX(i, j)].b_bottom = true;
+            boundaries[IX(i, j)].b_x = i;
+            boundaries[IX(i, j)].b_y = j;
+        }
+    }
     END_FOR
 }
 
@@ -171,9 +160,10 @@ bool SquareRigid::isOnCell(float x, float y)
 
     for (int i = 0; i < coordinates.size(); i++)
     {
-        sign = ((c_x - coordinates[i][0]) * (coordinates[(i+1)%4][1] - coordinates[i][1])) - ((c_y - coordinates[i][1]) * (coordinates[(i+1)%4][0] - coordinates[i][0]));
+        sign = ((c_x - coordinates[i][0]) * (coordinates[(i + 1) % 4][1] - coordinates[i][1])) - ((c_y - coordinates[i][1]) * (coordinates[(i + 1) % 4][0] - coordinates[i][0]));
 
-        if (sign > 0) return false;
+        if (sign > 0)
+            return false;
     }
 
     glBegin(GL_QUADS);
