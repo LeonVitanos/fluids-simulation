@@ -105,41 +105,35 @@ void SquareRigid::update(BoundaryCell *boundaries, float dt)
         //        coordinates[i][0], coordinates[i][1], rotation, i);
     }
 
-    /*int i, j;
-    FOR_EACH_CELL
+    int i, j;
+    /*FOR_EACH_CELL
         if (isOnCell(i, j)) cells[IX(i, j)] = true;
-    END_FOR
-
-    FOR_EACH_CELL
-        if (!cells[IX(i + 1, j)]) {
-            boundaries[IX(i, j)].b_right = true;
-            boundaries[IX(i, j)].b_x = i;
-            boundaries[IX(i, j)].b_y = j;
-        }
-        if (!cells[IX(i - 1, j)]) {
-            boundaries[IX(i, j)].b_left = true;
-            boundaries[IX(i, j)].b_x = i;
-            boundaries[IX(i, j)].b_y = j;
-        }
-        if (!cells[IX(i, j + 1)]) {
-            boundaries[IX(i, j)].b_top = true;
-            boundaries[IX(i, j)].b_x = i;
-            boundaries[IX(i, j)].b_y = j;
-        }
-        if (!cells[IX(i, j - 1)]) {
-            boundaries[IX(i, j)].b_bottom = true;
-            boundaries[IX(i, j)].b_x = i;
-            boundaries[IX(i, j)].b_y = j;
-        }
     END_FOR*/
 
-
-    //
-    //    float h = 1.0f / grid_size;
-    //    float x1 = (o_x - o_w / 2 + rotation[0]) * h;
-    //    float x2 = (o_x + o_w / 2 + rotation[1]) * h;
-    //    float y1 = (o_y - o_h / 2 + rotation[2]) * h;
-    //    float y2 = (o_y + o_h / 2 + rotation[3]) * h;
+    FOR_EACH_CELL
+        if (isOnCell(i, j)) {
+            if (!isOnCell(i + 1, j)) {
+                boundaries[IX(i, j)].b_right = true;
+                boundaries[IX(i, j)].b_x = i;
+                boundaries[IX(i, j)].b_y = j;
+            }
+            if (!isOnCell(i - 1, j)) {
+                boundaries[IX(i, j)].b_left = true;
+                boundaries[IX(i, j)].b_x = i;
+                boundaries[IX(i, j)].b_y = j;
+            }
+            if (!isOnCell(i, j + 1)) {
+                boundaries[IX(i, j)].b_top = true;
+                boundaries[IX(i, j)].b_x = i;
+                boundaries[IX(i, j)].b_y = j;
+            }
+            if (!isOnCell(i, j - 1)) {
+                boundaries[IX(i, j)].b_bottom = true;
+                boundaries[IX(i, j)].b_x = i;
+                boundaries[IX(i, j)].b_y = j;
+            }
+        }
+    END_FOR
 }
 
 void SquareRigid::setPosition(float x, float y)
