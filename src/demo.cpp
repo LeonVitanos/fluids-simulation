@@ -516,15 +516,6 @@ int main(int argc, char **argv)
 		{
 			pVector.push_back(new Particle(center + j * offset));
 			//forces.push_back((Force *)new Gravity(particles.back()));
-			if (i == 0)
-			{
-				//Apply fixed constraint on the first row particles
-				//constraints.push_back((Force *)new SlidingConstraint(particles.back(), 0.25));
-				if (j != -2)
-				{
-				}
-				// Rod constraints here
-			}
 			if (j != -2)
 				//spring connecting horizontally
 				forces.push_back((Force *)new SpringForce(pVector[i * 5 + j + 1], pVector[i * 5 + j + 2], dist, 0.7, 0.8));

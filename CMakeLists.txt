@@ -47,7 +47,6 @@ set(SOURCE_FILES
         src/SpringForce.cpp
         src/Gravity.cpp
         src/Force.cpp
-        src/Scene.cpp
         src/SlidingConstraint.cpp
         src/FixedConstraint.cpp
         src/ConstraintSolver.cpp
