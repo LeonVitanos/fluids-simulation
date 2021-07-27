@@ -1,28 +1,5 @@
-# SiCG-Part-1
+# Fluids Simulation
 
-Simulation in Computer Graphics Project Part 1
+This projects describes our implementation of fluid simulation, which is based on the provided implementation of a basic 2D fluid simulator by Jos Stam. The simulation supports basic interaction with fluids using the mouse to add density and velocity fields, as well as between the fluids with fixed objects, solid and rigid bodies with the help of boundaries. Interaction between the fluids and the particle system, is also supported.
 
-## Running
-
-### Makefile (Mac, VS Code)
-
-- Make sure to `brew install libpng` and install C/C++ and MakeFile Tools packages
-- Run using the makefile extension
-
-### CMake (Linux, VS Code)
-
-- Make sure to install CMake, C/C++, libpng and freeglut
-- Then run `cmake -B build`
-- Next `cmake --build build`
-- And lastly, to run, `./build/2imv15_project_1`
-
-## Next steps:
-
-- [ ] Add boundaries to the objects
-  - [ ] Fix crashing when moving object to top
-  - [ ] Moving object e.g to the right, makes it go to the left (max dis=distance to center of object)
-  - [ ] Moving object will go inside a bigger object
-- [ ] (maybe) have a second look at the fluid movement of the objects
-- [ ] Rotations
-- [ ] Two-way coupling
-- [ ] Particles and boundaries
+![alt text](https://github.com/LeonVitanos/fluids-simulation/blob/master/screenshots/cloth.png?raw=true)
